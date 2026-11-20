@@ -43,7 +43,7 @@ public struct SpeakerStep: Sendable {
     let voteQuips: [Candidate: String]
 
     func voteCard(_ c: Candidate) -> SpeakerCard {
-        SpeakerCard(action: .vote(c), title: "Låt \(c.surname) försöka", quip: voteQuips[c] ?? "")
+        SpeakerCard(action: .vote(c), title: "Låt kammaren rösta om \(c.surname)", quip: voteQuips[c] ?? "")
     }
 
     /// Alla kort i steget (för texter och tester).
@@ -55,52 +55,52 @@ public struct SpeakerStep: Sendable {
 public let speakerScript: [SpeakerStep] = [
     SpeakerStep(
         situation: "Valnatten är slut. Ingen sida har 175. Enligt tradition får största partiet försöka först. Enligt erfarenhet spelar det ingen roll.",
-        extras: [SpeakerCard(action: .probe, title: "Sonderingsrunda",
-                             quip: "Åtta partiledare, åtta kaffekoppar, ett besked: ”vi återkommer”.")],
+        extras: [SpeakerCard(action: .probe, title: "Kalla alla partiledare till samtal",
+                             quip: "Åtta partiledare, ett besked: ”vi återkommer”.")],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "Störst parti först. S har 99 mandat och en tradition att luta sig mot.",
-                    .kristersson: "Regeringen sitter kvar under tiden. Det är så det fungerar."]),
+        voteQuips: [.andersson: "Störst parti först. S gillar traditionen.",
+                    .kristersson: "Regeringen sitter kvar under tiden."]),
     SpeakerStep(
         situation: "SD vill inte längre ha ministrar, bara inflytande. Det låter som en nedgradering. Det är det inte.",
-        extras: [SpeakerCard(action: .mission(.kristersson), title: "Förhandlingsuppdrag till Kristersson",
-                             quip: "M får en vecka att räkna. M har räknat förut.")],
+        extras: [SpeakerCard(action: .mission(.kristersson), title: "Ge Kristersson en vecka att förhandla",
+                             quip: "M har räknat förut. M räknar igen.")],
         votes: [.kristersson, .andersson],
-        voteQuips: [.kristersson: "SD trycker gult. Gult är den nya färgen för ”ja, men”.",
-                    .andersson: "V väntar fortfarande på sina ministerposter. V väntar gärna."]),
+        voteQuips: [.kristersson: "SD trycker gult: ”ja, men”.",
+                    .andersson: "V väntar på ministerposter. V väntar gärna."]),
     SpeakerStep(
         situation: "C vill ha ett totalpaket från båda sidor och har satt en deadline för dem. Talmannen har ingen deadline. Än.",
-        extras: [SpeakerCard(action: .deadline, title: "Sätt en egen deadline",
-                             quip: "Om C får ha en deadline får du också ha en.")],
+        extras: [SpeakerCard(action: .deadline, title: "Sätt en deadline: omröstning nästa vecka",
+                             quip: "Om C får ha en deadline får du också.")],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "Rödgröna plus C. Det går om C vill. C vill ha ett paket först.",
+        voteQuips: [.andersson: "Det går om C vill. C vill ha ett paket först.",
                     .kristersson: "M, KD och L har ett paket. C har inte öppnat det."]),
     SpeakerStep(
         situation: "S vill regera utan V. V säger att kravet ”inte går att påverka”. Båda menar det. Det är det som är problemet.",
-        extras: [SpeakerCard(action: .mission(.andersson), title: "Förhandlingsuppdrag till Andersson",
-                             quip: "S får en vecka att övertyga V om att utanför är ett bra ställe att vara.")],
+        extras: [SpeakerCard(action: .mission(.andersson), title: "Ge Andersson en vecka att förhandla",
+                             quip: "S ska övertyga V om att utanför är bra.")],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "V röstar nej av princip. S kallar det ansvarslöst. V kallar det samma sak.",
-                    .kristersson: "L och SD har hittat ett sätt att tycka olika tillsammans."]),
+        voteQuips: [.andersson: "V röstar nej av princip.",
+                    .kristersson: "L och SD tycker olika, tillsammans."]),
     SpeakerStep(
         situation: "C har valt S:s totalpaket. Vågmästaren har vägt. Vågen står still.",
-        extras: [SpeakerCard(action: .meeting, title: "Kalla S och V till ditt kontor",
+        extras: [SpeakerCard(action: .meeting, title: "Kalla S och V till möte hos dig",
                              quip: "Du bjuder på kaffe. Ingen dricker.")],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "S + MP + C. På papperet ser det ut som en regering.",
-                    .kristersson: "KD har 22 mandat och ett tydligt krav: Kristersson. Det räcker inte heller."]),
+        voteQuips: [.andersson: "På papperet ser det ut som en regering.",
+                    .kristersson: "KD har ett krav: Kristersson."]),
     SpeakerStep(
         situation: "S och V har mötts i två timmar. Beskedet var detsamma som tidigare, vilket i sig är ett slags besked.",
-        extras: [SpeakerCard(action: .probe, title: "Sonderingsrunda igen",
-                             quip: "Samma kaffe, samma frågor. MP svarar som S. Det är det enda som är enkelt.")],
+        extras: [SpeakerCard(action: .probe, title: "Kalla alla partiledare till samtal",
+                             quip: "Samma kaffe. MP svarar som S.")],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "S, MP och C står där de stod. C bestämde sig, och sedan stod allt still.",
-                    .kristersson: "SD trycker gult igen. Det börjar likna en vana."]),
+        voteQuips: [.andersson: "C bestämde sig. Sedan stod allt still.",
+                    .kristersson: "SD trycker gult igen. Det är en vana nu."]),
     SpeakerStep(
         situation: "C säger nej till V i regeringen, även om alternativet är extraval. Alternativet hörde det.",
         extras: [],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "V röstar nej. C röstar ja. S röstar på sig själv. Det räcker inte.",
-                    .kristersson: "M, KD, L och SD är överens om Kristersson. De är inte fler nu än förra veckan."]),
+        voteQuips: [.andersson: "C säger ja, V säger nej. Det räcker inte.",
+                    .kristersson: "Samma fyra partier som förra veckan."]),
 ]
 
 public struct SpeakerGame: PerspectiveGame {

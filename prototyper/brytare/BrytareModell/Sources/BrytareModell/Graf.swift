@@ -82,22 +82,40 @@ public struct Point: Equatable, Sendable {
 }
 
 public struct GraphLayout: Sendable {
+    /// `.standard` för de små graferna, `.wide` för talmannens stora nätverk där partierna ska stå långt isär.
+    public enum Style: Sendable { case standard, wide }
+
+    /// Krafterna. Enheterna är rutan [-1, 1] × [-1, 1].
+    private struct Forces {
+        var repulsion: Double
+        var allyLength: Double
+        var allyStrength: Double
+        var negotiatingLength: Double
+        var negotiatingStrength: Double
+        var conflictLength: Double
+        var conflictStrength: Double
+        var gravity: Double
+        /// Knuffar partier bort från mitten av linjer de inte hör till (där emojin sitter).
+        var midpointRepulsion: Double
+        var damping = 0.85
+    }
+
     public private(set) var positions: [P: Point]
     private var velocities: [P: Point]
-
-    // Krafterna. Enheterna är rutan [-1, 1] × [-1, 1].
-    private static let repulsion = 0.03
-    private static let allyLength = 0.4
-    private static let allyStrength = 4.0
-    private static let negotiatingLength = 0.7
-    private static let negotiatingStrength = 1.5
-    private static let conflictLength = 1.3
-    private static let conflictStrength = 2.0
-    private static let gravity = 0.6
-    private static let damping = 0.85
+    private let forces: Forces
 
     /// Partierna börjar i en båge från vänster till höger.
-    public init() {
+    public init(style: Style = .standard) {
+        switch style {
+        case .standard:
+            forces = Forces(repulsion: 0.03, allyLength: 0.4, allyStrength: 4, negotiatingLength: 0.7,
+                            negotiatingStrength: 1.5, conflictLength: 1.3, conflictStrength: 2, gravity: 0.6,
+                            midpointRepulsion: 0)
+        case .wide:
+            forces = Forces(repulsion: 0.09, allyLength: 0.6, allyStrength: 3, negotiatingLength: 0.85,
+                            negotiatingStrength: 1.5, conflictLength: 1.5, conflictStrength: 2, gravity: 0.35,
+                            midpointRepulsion: 0.02)
+        }
         var pos: [P: Point] = [:]
         for (i, p) in leftToRight.enumerated() {
             let angle = Double.pi - Double(i) * Double.pi / Double(leftToRight.count - 1)
@@ -113,11 +131,22 @@ public struct GraphLayout: Sendable {
         return ((pa.x - pb.x) * (pa.x - pb.x) + (pa.y - pb.y) * (pa.y - pb.y)).squareRoot()
     }
 
+    /// En liten knuff utåt och runt, så att det syns att något ändrades.
+    public mutating func nudge() {
+        for p in P.allCases {
+            let pos = positions[p]!
+            velocities[p]!.x += 0.04 * pos.x - 0.03 * pos.y
+            velocities[p]!.y += 0.04 * pos.y + 0.03 * pos.x
+        }
+    }
+
     /// Ett steg i simuleringen.
     public mutating func step(_ relations: [KeyRelation], dt: Double = 1.0 / 60) {
+        let f = forces
         let kinds = Dictionary(uniqueKeysWithValues: relations.map { ($0.pair, $0.kind) })
         var force = positions.mapValues { _ in Point(x: 0, y: 0) }
         let parties = P.allCases
+        func push(_ p: P, _ fx: Double, _ fy: Double) { force[p]!.x += fx; force[p]!.y += fy }
         for i in parties.indices {
             for j in parties.indices where j > i {
                 let a = parties[i], b = parties[j]
@@ -125,23 +154,39 @@ public struct GraphLayout: Sendable {
                 var dx = pb.x - pa.x, dy = pb.y - pa.y
                 var d = (dx * dx + dy * dy).squareRoot()
                 if d < 0.01 { dx = 0.01; dy = 0; d = 0.01 }
-                var f = -Self.repulsion / (d * d)        // positivt = dras ihop
+                var pull = -f.repulsion / (d * d)        // positivt = dras ihop
                 switch kinds[Pair(a, b)] {
-                case .attraction?: f += Self.allyStrength * (d - Self.allyLength)
-                case .negotiating?: f += Self.negotiatingStrength * (d - Self.negotiatingLength)
-                case .conflict?: f += Self.conflictStrength * min(0, d - Self.conflictLength)
+                case .attraction?: pull += f.allyStrength * (d - f.allyLength)
+                case .negotiating?: pull += f.negotiatingStrength * (d - f.negotiatingLength)
+                case .conflict?: pull += f.conflictStrength * min(0, d - f.conflictLength)
                 case nil: break
                 }
-                let fx = f * dx / d, fy = f * dy / d
-                force[a]!.x += fx; force[a]!.y += fy
-                force[b]!.x -= fx; force[b]!.y -= fy
+                push(a, pull * dx / d, pull * dy / d)
+                push(b, -pull * dx / d, -pull * dy / d)
+            }
+        }
+        if f.midpointRepulsion > 0 {
+            for line in relations {
+                let a = positions[line.pair.a]!, b = positions[line.pair.b]!
+                let m = Point(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
+                for p in parties where p != line.pair.a && p != line.pair.b {
+                    let pos = positions[p]!
+                    var dx = pos.x - m.x, dy = pos.y - m.y
+                    var d = (dx * dx + dy * dy).squareRoot()
+                    if d < 0.01 { dx = 0.01; dy = 0; d = 0.01 }
+                    let away = f.midpointRepulsion / (d * d)
+                    push(p, away * dx / d, away * dy / d)
+                    // Linjens ändar får motkraften, så att hela linjen flyttar sig.
+                    push(line.pair.a, -away * dx / d / 2, -away * dy / d / 2)
+                    push(line.pair.b, -away * dx / d / 2, -away * dy / d / 2)
+                }
             }
         }
         for p in parties {
             var v = velocities[p]!
             var pos = positions[p]!
-            v.x = (v.x + (force[p]!.x - Self.gravity * pos.x) * dt) * Self.damping
-            v.y = (v.y + (force[p]!.y - Self.gravity * pos.y) * dt) * Self.damping
+            v.x = (v.x + (force[p]!.x - f.gravity * pos.x) * dt) * f.damping
+            v.y = (v.y + (force[p]!.y - f.gravity * pos.y) * dt) * f.damping
             pos.x = min(1, max(-1, pos.x + v.x))
             pos.y = min(1, max(-1, pos.y + v.y))
             velocities[p] = v

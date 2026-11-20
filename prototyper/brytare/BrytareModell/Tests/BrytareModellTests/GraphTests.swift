@@ -82,3 +82,60 @@ struct GraphTests {
         }
     }
 }
+
+@Suite("Talmannens breda nätverk")
+struct WideGraphTests {
+    func settled(after h: Int) -> GraphLayout {
+        var layout = GraphLayout(style: .wide)
+        let r = keyRelations(after: h)
+        for _ in 0..<1500 { layout.step(r) }
+        return layout
+    }
+
+    func midpoint(_ l: GraphLayout, _ pair: Pair) -> Point {
+        let a = l.positions[pair.a]!, b = l.positions[pair.b]!
+        return Point(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
+    }
+
+    func dist(_ a: Point, _ b: Point) -> Double { ((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)).squareRoot() }
+
+    @Test("Partierna står långt isär efter varje rubrik")
+    func isar() {
+        for h in 0...timelineEnd {
+            let l = settled(after: h)
+            for (i, a) in P.allCases.enumerated() {
+                for b in P.allCases.dropFirst(i + 1) {
+                    #expect(l.distance(a, b) >= 0.5, "rubrik \(h): \(a.rawValue)–\(b.rawValue) \(l.distance(a, b))")
+                }
+            }
+        }
+    }
+
+    @Test("Emojin mitt på en linje krockar varken med partierna eller med andra emojier")
+    func emojier() {
+        for h in 0...timelineEnd {
+            let l = settled(after: h)
+            let lines = keyRelations(after: h)
+            let mids = lines.map { midpoint(l, $0.pair) }
+            for (m, line) in zip(mids, lines) {
+                for p in P.allCases where p != line.pair.a && p != line.pair.b {
+                    #expect(dist(m, l.positions[p]!) >= 0.26, "rubrik \(h): \(line.pair) mot \(p.rawValue)")
+                }
+            }
+            for i in mids.indices {
+                for j in mids.indices where j > i {
+                    #expect(dist(mids[i], mids[j]) >= 0.16, "rubrik \(h): \(lines[i].pair) mot \(lines[j].pair)")
+                }
+            }
+        }
+    }
+
+    @Test("En knuff flyttar noderna, och de lägger sig igen")
+    func knuff() {
+        var l = settled(after: 3)
+        let before = l.positions
+        l.nudge()
+        l.step(keyRelations(after: 3))
+        #expect(P.allCases.contains { dist(l.positions[$0]!, before[$0]!) > 0.005 })
+    }
+}

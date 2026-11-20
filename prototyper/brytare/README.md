@@ -11,7 +11,7 @@ Alla spelen har samma upplägg. Du gör en sak i taget och väljer mellan 2–3 
 
 Talmannen bygger dessutom in fem ingredienser från genomgången av kortspelet Swärje (namn och bilder är inte lånade): den verkliga rubriken i ett eget kort och kvickheten på valkortet, en torr spelledarröst, poäng som är själva satiren, en omvänd brasklapp ("Alla rubriker i spelet är verkliga. Vi hittade inte på dem. Vi hade inte behövt.") och skrivregeln att reta alla lika mycket.
 
-**Omgång 4 (bara talmannen):** relationerna visas i tre vyer att växla mellan – riksdagens halvcirkel med bågar mellan partierna, en tabell parti × parti med ikoner och en klartextvy för ett parti i taget (geometri och gruppering i `Relationsvyer.swift`). Valens följder är hemliga tills man valt; då visar en effektruta vad som hände. Menyn har knappen "Visa starthjälpen igen".
+**Omgång 5 (bara talmannen):** relationerna visas i ett stort nätverk där partierna står långt isär (`GraphLayout(style: .wide)`, testat så att noder och emojier inte krockar) och varje linje har en emoji i mitten: 🤝 samarbete, 💬 förhandlar, ✋ röd linje. Noderna hoppar till när en rubrik ändrar linjerna. Knapparna säger vad som händer i kammaren ("Låt kammaren rösta om Andersson") med högst en kort rad till; följderna syns först i effektrutan efter valet. Menyn har knappen "Visa starthjälpen igen".
 
 Längst ner i menyn ligger **Brytare** från omgång 1 som jämförelse.
 

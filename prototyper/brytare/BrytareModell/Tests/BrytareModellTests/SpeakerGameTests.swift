@@ -145,6 +145,20 @@ struct SpeakerGameTests {
         #expect(g.outcome == "Du sätter en deadline till nästa vecka. Tålamodet var redan fullt.")
     }
 
+    @Test("Knapparna säger vad som händer i kammaren, kort")
+    func kortaKnappar() {
+        let g = SpeakerGame()
+        #expect(g.choices.map(\.title) == ["Kalla alla partiledare till samtal",
+                                           "Låt kammaren rösta om Andersson",
+                                           "Låt kammaren rösta om Kristersson"])
+        for step in speakerScript {
+            for card in step.cards {
+                #expect(card.title.count <= 45, "\(card.title)")
+                #expect(card.quip.count <= 60, "\(card.quip)")
+            }
+        }
+    }
+
     @Test("Kvickheterna avslöjar inte stödet i förväg")
     func ingaSiffror() {
         let quips = speakerScript.flatMap { $0.cards.map(\.quip) }

@@ -18,9 +18,11 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
             VStack(spacing: 10) {
                 meters
                 if G.self == SpeakerGame.self {
-                    // Omgång 4: talmannen visar situationen först och relationerna under, i tre vyer.
+                    // Talmannen: situationen först, sedan ett stort nätverk med emojis på linjerna.
                     card
-                    RelationsPanel(headlineIndex: game.headlineIndex)
+                    GraphView(headlineIndex: game.headlineIndex, emojis: true)
+                        .frame(height: 360)
+                    EmojiLegend()
                 } else {
                     Button { showGraph = true } label: {
                         VStack(spacing: 4) {
@@ -149,7 +151,7 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
                 }
             }
             Text(G.self == SpeakerGame.self
-                 ? "Relationerna: välj Halvcirkel, Tabell eller Ett parti och tryck för att läsa vad som drar åt och vad som krockar. Vad dina val kostar ser du först efteråt."
+                 ? "Nätverket: 🤝 samarbete, 💬 förhandlar, ✋ röd linje. Tjock linje = ändrades av senaste rubriken. Vad dina val kostar ser du först efteråt."
                  : "Grafen: vita linjer drar ihop partier, gula förhandlar, röda är konflikter. Tjock linje = ändrades av senaste rubriken. Tryck på grafen för att se den stor, med förklaringar.")
                 .font(.footnote).foregroundStyle(.secondary)
             Button {

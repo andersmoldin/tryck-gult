@@ -6,7 +6,16 @@ import BrytareModell
 struct GraphView: View {
     let headlineIndex: Int
     var showLabels = false
-    @State private var sim = Simulation()
+    /// Talmannens stora nätverk: partierna långt isär och en emoji mitt på varje linje i stället för text.
+    var emojis = false
+    @State private var sim: Simulation
+
+    init(headlineIndex: Int, showLabels: Bool = false, emojis: Bool = false) {
+        self.headlineIndex = headlineIndex
+        self.showLabels = showLabels
+        self.emojis = emojis
+        _sim = State(initialValue: Simulation(style: emojis ? .wide : .standard))
+    }
 
     var body: some View {
         let lines = keyRelations(after: headlineIndex)
@@ -20,7 +29,7 @@ struct GraphView: View {
     }
 
     private func draw(in ctx: inout GraphicsContext, size: CGSize, lines: [KeyRelation]) {
-        let pad: CGFloat = showLabels ? 44 : 28
+        let pad: CGFloat = showLabels ? 44 : (emojis ? 34 : 28)
         func point(_ p: P) -> CGPoint {
             let pos = sim.layout.positions[p]!
             return CGPoint(x: pad + (CGFloat(pos.x) + 1) / 2 * (size.width - 2 * pad),
@@ -40,6 +49,16 @@ struct GraphView: View {
                 ctx.stroke(path, with: .color(.red), lineWidth: width)
             }
         }
+        if emojis {
+            for line in lines {
+                let a = point(line.pair.a), b = point(line.pair.b)
+                let mid = CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
+                let r: CGFloat = line.isNew ? 15 : 13
+                ctx.fill(Path(ellipseIn: CGRect(x: mid.x - r, y: mid.y - r, width: 2 * r, height: 2 * r)),
+                         with: .color(Color(white: 0.07)))
+                ctx.draw(Text(line.kind.emoji).font(.system(size: line.isNew ? 20 : 17)), at: mid)
+            }
+        }
         if showLabels {
             for line in lines {
                 let a = point(line.pair.a), b = point(line.pair.b)
@@ -54,7 +73,8 @@ struct GraphView: View {
         }
         for p in P.allCases {
             let c = point(p)
-            let r = (showLabels ? 14 : 10) + CGFloat(p.seats).squareRoot() * (showLabels ? 2.0 : 1.5)
+            let r = emojis ? 14 + CGFloat(p.seats).squareRoot() * 1.1
+                : (showLabels ? 14 : 10) + CGFloat(p.seats).squareRoot() * (showLabels ? 2.0 : 1.5)
             ctx.fill(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r)), with: .color(p.color))
             ctx.stroke(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r)), with: .color(.black), lineWidth: 1.5)
             ctx.draw(Text(p.rawValue).font(.system(size: showLabels ? 15 : 12, weight: .heavy)).foregroundStyle(p.textColor), at: c)
@@ -63,14 +83,45 @@ struct GraphView: View {
 
     /// Håller layouten mellan bildrutorna. Ingen observerad state: den ändras medan Canvas ritar.
     final class Simulation {
-        var layout = GraphLayout()
+        var layout: GraphLayout
         private var last: Date?
+        private var lastLines: [KeyRelation]?
+
+        init(style: GraphLayout.Style) { layout = GraphLayout(style: style) }
 
         func advance(to now: Date, lines: [KeyRelation]) {
+            // "Hoppa till": när en rubrik ändrar linjerna får noderna en knuff innan de lägger sig.
+            if let previous = lastLines, previous != lines { layout.nudge() }
+            lastLines = lines
             let elapsed = min(now.timeIntervalSince(last ?? now), 0.1)
             last = now
             for _ in 0..<Int((elapsed * 60).rounded()) { layout.step(lines) }
         }
+    }
+}
+
+extension RelationKind {
+    /// Emojin mitt på linjen i talmannens nätverk.
+    var emoji: String {
+        switch self {
+        case .attraction: return "🤝"
+        case .negotiating: return "💬"
+        case .conflict: return "✋"
+        }
+    }
+}
+
+/// Teckenförklaring för emojinätverket.
+struct EmojiLegend: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            Text("🤝 samarbete")
+            Text("💬 förhandlar")
+            Text("✋ röd linje")
+            Spacer()
+            Text("tjock = nytt").foregroundStyle(.secondary)
+        }
+        .font(.caption)
     }
 }
 
