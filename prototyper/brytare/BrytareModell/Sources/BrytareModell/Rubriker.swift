@@ -51,7 +51,6 @@ public let headlines: [Headline] = [
              ejects: [.V],
              apply: { r in
                  r.pairs.insert(Pair(.S, .V))
-                 r.allies.remove(Pair(.S, .V))
                  r.demand[.S] = "S + MP + C – V utanför"
                  r.demand[.V] = "Ministerposter – annars nej"
              }),
@@ -63,8 +62,6 @@ public let headlines: [Headline] = [
              ejects: [.C],
              apply: { r in
                  for p in kristerssonSide { r.pairs.insert(Pair(.C, p)) }
-                 r.allies.insert(Pair(.C, .S))
-                 r.allies.insert(Pair(.C, .MP))
                  r.demand[.C] = "S:s totalpaket – utan V i regeringen"
                  r.supportVote[.C] = .ja
              }),

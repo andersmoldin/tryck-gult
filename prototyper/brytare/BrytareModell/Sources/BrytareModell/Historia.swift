@@ -11,6 +11,13 @@ public enum Candidate: String, CaseIterable, Sendable {
         case .kristersson: return "Kristersson (M)"
         }
     }
+
+    public var surname: String {
+        switch self {
+        case .andersson: return "Andersson"
+        case .kristersson: return "Kristersson"
+        }
+    }
 }
 
 /// Antal rubriker på tidslinjen.

@@ -25,7 +25,7 @@ struct MenuView: View {
                 } header: {
                     Text("Välj perspektiv")
                 } footer: {
-                    Text("Samma höst, samma rubriker – fyra sätt att spela den.")
+                    Text("Samma höst, samma rubriker – fyra sätt att spela den.\n\nAlla rubriker i spelet är verkliga. Vi hittade inte på dem. Vi hade inte behövt.")
                 }
                 Section("Från omgång 1") {
                     NavigationLink {

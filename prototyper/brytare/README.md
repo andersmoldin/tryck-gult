@@ -3,11 +3,13 @@
 En grov app att provspela på telefonen. Startmenyn har fyra mycket små spel om samma höst, vart och ett ur ett eget perspektiv. Alla följer de sex verkliga rubrikerna från valnatten till 18 nov:
 
 1. **Statsministerkandidaten** – du leder S och behöver både V och C, men deras krav utesluter varandra.
-2. **Talmannen** – du väljer vem som får försöka och när det blir omröstning. Att vänta kostar tålamod.
+2. **Talmannen** – varje vecka är en situation med 2–3 val: sondera, ge förhandlingsuppdrag, sätt en deadline eller låt någon försöka. Stödet är okänt tills du sonderat; att ta reda på kostar riksdagens tålamod, att gissa kostar försök. Poängen är hur många gånger samtalen fortsatte (omgång 3).
 3. **Vågmästarpartiet** – du leder C. Extraval går att undvika, men bara genom att bryta ett löfte.
 4. **Kommentatorn** – du gissar nästa rubrik bland tre. Rätt gissning ger poäng, och tre fel ger sparken.
 
-Alla spelen har samma upplägg. Du gör en sak i taget och väljer mellan 2–3 alternativ, och varje knapp visar vad valet kostar. Ett starttips visas första gången (`?` visar det igen). En kraftriktad graf visar partierna som noder: ljusa linjer drar ihop dem, och röda linjer är konflikter. Grafen ändras när rubrikerna slår ner.
+Alla spelen har samma upplägg. Du gör en sak i taget och väljer mellan 2–3 alternativ, och varje knapp visar vad valet kostar. Ett starttips visas första gången (`?` visar det igen). En kraftriktad graf visar partierna som noder och bara några få nyckelrelationer: vita linjer drar ihop, gula förhandlar och röda är konflikter. Linjer som senaste rubriken ändrade är tjockare. Tryck på grafen för en helskärmsvy med etiketter och en lista där det nya är märkt.
+
+Talmannen bygger dessutom in fem ingredienser från genomgången av kortspelet Swärje (namn och bilder är inte lånade): den verkliga rubriken i ett eget kort och kvickheten på valkortet, en torr spelledarröst, poäng som är själva satiren, en omvänd brasklapp ("Alla rubriker i spelet är verkliga. Vi hittade inte på dem. Vi hade inte behövt.") och skrivregeln att reta alla lika mycket.
 
 Längst ner i menyn ligger **Brytare** från omgång 1 som jämförelse.
 

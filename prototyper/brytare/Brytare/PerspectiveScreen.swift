@@ -5,6 +5,7 @@ import BrytareModell
 struct PerspectiveScreen<G: PerspectiveGame>: View {
     @State private var game = G()
     @State private var showTips = false
+    @State private var showGraph = false
     @AppStorage private var tipsSeen: Bool
     @Environment(\.dismiss) private var dismiss
 
@@ -16,8 +17,14 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
         ScrollView {
             VStack(spacing: 10) {
                 meters
-                GraphView(headlineIndex: game.headlineIndex)
-                    .frame(height: 220)
+                Button { showGraph = true } label: {
+                    VStack(spacing: 4) {
+                        GraphView(headlineIndex: game.headlineIndex)
+                            .frame(height: 200)
+                        GraphLegend()
+                    }
+                }
+                .buttonStyle(.plain)
                 card
             }
             .padding(.horizontal, 14)
@@ -30,11 +37,13 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
         }
         .onAppear { if !tipsSeen { showTips = true } }
         .sheet(isPresented: $showTips, onDismiss: { tipsSeen = true }) { tips }
+        .fullScreenCover(isPresented: $showGraph) { GraphDetailView(headlineIndex: game.headlineIndex) }
         .overlay { if let e = game.ending { endingView(e).transition(.opacity) } }
         .animation(.easeInOut(duration: 0.25), value: game.ending)
     }
 
     private var meters: some View {
+        VStack(alignment: .leading, spacing: 4) {
         HStack(spacing: 8) {
             ForEach(game.meters, id: \.name) { m in
                 VStack(spacing: 1) {
@@ -45,6 +54,10 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
                 .padding(.vertical, 6)
                 .background(RoundedRectangle(cornerRadius: 8).fill(Color(white: 0.13)))
             }
+        }
+        ForEach(game.meters.filter { $0.caption != nil }, id: \.name) { m in
+            Text("\(m.name): \(m.caption ?? "")").font(.caption2).foregroundStyle(.secondary)
+        }
         }
     }
 
@@ -74,7 +87,11 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
                         withAnimation(.easeInOut(duration: 0.3)) { game.choose(c.id) }
                     } label: {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(c.title).font(.subheadline.bold()).foregroundStyle(.white)
+                            Text(c.quip == nil ? c.title : c.title.uppercased())
+                                .font(.subheadline.bold()).foregroundStyle(.white)
+                            if let quip = c.quip {
+                                Text(quip).font(.caption).italic().foregroundStyle(.white.opacity(0.8))
+                            }
                             Text(c.cost).font(.caption).foregroundStyle(.yellow)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -118,7 +135,7 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
                     Text(tip)
                 }
             }
-            Text("Grafen: ljusa linjer drar ihop partier, röda linjer är konflikter. Den ändras när rubrikerna slår ner.")
+            Text("Grafen: vita linjer drar ihop partier, gula förhandlar, röda är konflikter. Tjock linje = ändrades av senaste rubriken. Tryck på grafen för att se den stor, med förklaringar.")
                 .font(.footnote).foregroundStyle(.secondary)
             Button {
                 showTips = false

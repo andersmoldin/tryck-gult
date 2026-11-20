@@ -3,27 +3,43 @@ import Testing
 
 @Suite("Grafen")
 struct GraphTests {
-    @Test("På valnatten drar blocken ihop sig och krockar med varandra")
-    func valnatten() {
-        let r = relations(after: 0)
-        #expect(r[Pair(.S, .V)] == .attraction)
-        #expect(r[Pair(.M, .SD)] == .attraction)
-        #expect(r[Pair(.S, .M)] == .conflict)
-        #expect(r[Pair(.SD, .C)] == .conflict)
-        #expect(r[Pair(.C, .S)] == nil)
+    func rel(_ h: Int, _ a: P, _ b: P) -> KeyRelation? {
+        keyRelations(after: h).first { $0.pair == Pair(a, b) }
     }
 
-    @Test("Rubrikerna ändrar linjerna: S–V blir konflikt, C dras mot S")
+    @Test("Få, tydliga linjer med etikett i varje läge")
+    func fa() {
+        for h in 0...timelineEnd {
+            let r = keyRelations(after: h)
+            #expect((6...10).contains(r.count), "rubrik \(h): \(r.count) linjer")
+            #expect(r.allSatisfy { !$0.label.isEmpty })
+        }
+    }
+
+    @Test("Valnatten: blocken och C:s två nej")
+    func valnatten() {
+        #expect(rel(0, .S, .V)?.kind == .attraction)
+        #expect(rel(0, .V, .C)?.kind == .conflict)
+        #expect(rel(0, .V, .C)?.label == "C: inget V i regeringen")
+        #expect(rel(0, .SD, .L)?.kind == .conflict)
+        #expect(keyRelations(after: 0).allSatisfy { !$0.isNew })
+    }
+
+    @Test("Rubrikerna ändrar linjerna och det nya märks")
     func rubriker() {
-        #expect(relations(after: 1)[Pair(.SD, .C)] == nil)
-        #expect(relations(after: 3)[Pair(.S, .V)] == .conflict)
-        #expect(relations(after: 4)[Pair(.C, .S)] == .attraction)
-        #expect(relations(after: 4)[Pair(.C, .M)] == .conflict)
+        #expect(rel(1, .SD, .L) == nil)
+        #expect(rel(2, .C, .S)?.kind == .negotiating)
+        #expect(rel(3, .S, .V)?.kind == .conflict)
+        #expect(rel(3, .S, .V)?.isNew == true)
+        #expect(rel(4, .C, .S)?.kind == .attraction)
+        #expect(rel(4, .C, .M)?.kind == .conflict)
+        #expect(rel(4, .V, .C)?.isNew == false)
+        #expect(rel(6, .V, .C)?.isNew == true)
     }
 
     func settled(after h: Int, steps: Int = 900) -> GraphLayout {
         var layout = GraphLayout()
-        let r = relations(after: h)
+        let r = keyRelations(after: h)
         for _ in 0..<steps { layout.step(r) }
         return layout
     }
@@ -31,9 +47,9 @@ struct GraphTests {
     @Test("När grafen har lagt sig står allierade närmare varandra än partier i konflikt")
     func avstand() {
         let layout = settled(after: 0)
-        let r = relations(after: 0)
-        func mean(_ kind: Relation) -> Double {
-            let d = r.filter { $0.value == kind }.map { layout.distance($0.key.a, $0.key.b) }
+        let r = keyRelations(after: 0)
+        func mean(_ kind: RelationKind) -> Double {
+            let d = r.filter { $0.kind == kind }.map { layout.distance($0.pair.a, $0.pair.b) }
             return d.reduce(0, +) / Double(d.count)
         }
         #expect(mean(.attraction) < mean(.conflict) * 0.6)
@@ -45,11 +61,11 @@ struct GraphTests {
         #expect(layout.distance(.C, .S) < layout.distance(.C, .M))
     }
 
-    @Test("Grafen stannar inom ramen och lugnar ner sig")
+    @Test("Grafen stannar inom ramen och står still när den lagt sig")
     func stabil() {
         var layout = settled(after: 6)
         let before = layout.positions
-        layout.step(relations(after: 6))
+        layout.step(keyRelations(after: 6))
         for p in P.allCases {
             let pos = layout.positions[p]!
             #expect(abs(pos.x) <= 1 && abs(pos.y) <= 1)

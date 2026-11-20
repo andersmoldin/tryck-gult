@@ -17,8 +17,6 @@ public struct Rules: Sendable {
     public var pairs: Set<Pair>
     /// Hur partiet röstar när kravet är uppfyllt.
     public var supportVote: [P: Vote]
-    /// Partier som drar åt samma håll (visas i grafen; påverkar inte krockarna).
-    public var allies: Set<Pair>
     public func clash(_ x: P, _ y: P) -> Bool { pairs.contains(Pair(x, y)) }
 }
 
@@ -40,8 +38,6 @@ public func startRules() -> Rules {
             .SD: "Ministerposter för SD",
         ],
         pairs: pairs,
-        supportVote: [.S: .ja, .V: .ja, .MP: .ja, .C: .gult, .L: .ja, .KD: .ja, .M: .ja, .SD: .ja],
-        allies: [Pair(.S, .V), Pair(.S, .MP), Pair(.V, .MP),
-                 Pair(.M, .KD), Pair(.M, .L), Pair(.KD, .L), Pair(.M, .SD), Pair(.KD, .SD)]
+        supportVote: [.S: .ja, .V: .ja, .MP: .ja, .C: .gult, .L: .ja, .KD: .ja, .M: .ja, .SD: .ja]
     )
 }

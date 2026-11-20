@@ -6,12 +6,18 @@ public struct Choice: Identifiable, Equatable, Sendable {
     public let title: String
     /// Vad valet kostar eller ger, i klartext.
     public let cost: String
+    /// En kvickhet i kursiv (spelledarens röst). Hör till valet, aldrig till rubriken.
+    public var quip: String? = nil
 }
 
 public struct Meter: Equatable, Sendable {
     public let name: String
     public let value: String
-    public init(name: String, value: String) { self.name = name; self.value = value }
+    /// En rad som förklarar vad mätaren betyder.
+    public let caption: String?
+    public init(name: String, value: String, caption: String? = nil) {
+        self.name = name; self.value = value; self.caption = caption
+    }
 }
 
 public struct Ending: Equatable, Sendable {
