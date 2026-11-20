@@ -32,11 +32,7 @@ final class GameController {
     private func wait(for followUp: FollowUp?) {
         guard let followUp else { return }
         let gen = generation
-        let delay: Double
-        switch followUp {
-        case .headline(let after), .finishVote(let after): delay = after
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + followUp.delay) { [weak self] in
             guard let self, self.generation == gen else { return }
             let next: FollowUp?
             switch followUp {

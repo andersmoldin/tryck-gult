@@ -21,6 +21,13 @@ public enum FollowUp: Equatable, Sendable {
     case headline(after: Double)
     /// Anropa `finishVote()` efter så här många sekunder.
     case finishVote(after: Double)
+
+    /// Hur länge appen ska vänta.
+    public var delay: Double {
+        switch self {
+        case .headline(let after), .finishVote(let after): return after
+        }
+    }
 }
 
 public struct VoteResult: Equatable, Sendable {
