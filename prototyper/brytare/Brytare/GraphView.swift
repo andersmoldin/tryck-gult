@@ -77,19 +77,22 @@ struct GraphView: View {
 /// Teckenförklaring i en rad.
 struct GraphLegend: View {
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             swatch(.white.opacity(0.75), "dragning")
-            swatch(.yellow, "förhandlar")
+            swatch(.yellow, "förhandlar", dashed: true)
             swatch(.red, "konflikt")
+            Text("tjock = nytt").foregroundStyle(.secondary)
             Spacer()
             Text("Tryck för att förstora").foregroundStyle(.secondary)
         }
         .font(.system(size: 10))
     }
 
-    private func swatch(_ color: Color, _ label: String) -> some View {
+    private func swatch(_ color: Color, _ label: String, dashed: Bool = false) -> some View {
         HStack(spacing: 4) {
-            RoundedRectangle(cornerRadius: 1).fill(color).frame(width: 14, height: 3)
+            Path { p in p.move(to: CGPoint(x: 0, y: 1.5)); p.addLine(to: CGPoint(x: 14, y: 1.5)) }
+                .stroke(color, style: StrokeStyle(lineWidth: 3, dash: dashed ? [3, 2] : []))
+                .frame(width: 14, height: 3)
             Text(label)
         }
     }
@@ -109,7 +112,10 @@ struct GraphDetailView: View {
                     GraphView(headlineIndex: headlineIndex, showLabels: true)
                         .frame(height: 420)
                     ForEach(keyRelations(after: headlineIndex), id: \.pair) { r in
-                        row(r)
+                        row(r, removed: false)
+                    }
+                    ForEach(removedRelations(after: headlineIndex), id: \.pair) { r in
+                        row(r, removed: true)
                     }
                 }
                 .padding(14)
@@ -120,7 +126,7 @@ struct GraphDetailView: View {
         }
     }
 
-    private func row(_ r: KeyRelation) -> some View {
+    private func row(_ r: KeyRelation, removed: Bool) -> some View {
         let (symbol, color): (String, Color) = {
             switch r.kind {
             case .attraction: return ("↔", .white)
@@ -133,9 +139,13 @@ struct GraphDetailView: View {
                 .font(.subheadline.bold().monospaced())
                 .foregroundStyle(color)
                 .frame(width: 84, alignment: .leading)
-            Text(r.label).font(.subheadline)
+            Text(r.label).font(.subheadline).strikethrough(removed)
             Spacer()
-            if r.isNew {
+            if removed {
+                Text("BORTA").font(.caption2.weight(.heavy))
+                    .padding(.horizontal, 5).padding(.vertical, 2)
+                    .background(Color.gray).foregroundStyle(.black)
+            } else if r.isNew {
                 Text("NYTT").font(.caption2.weight(.heavy))
                     .padding(.horizontal, 5).padding(.vertical, 2)
                     .background(Color.orange).foregroundStyle(.black)

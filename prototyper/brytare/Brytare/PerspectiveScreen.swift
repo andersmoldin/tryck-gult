@@ -25,6 +25,7 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Partiernas relationer. Tryck för att förstora.")
                 card
             }
             .padding(.horizontal, 14)
@@ -168,6 +169,12 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
                 .foregroundStyle(.black)
                 Button("Till menyn") { dismiss() }
                     .foregroundStyle(.white.opacity(0.8))
+                if let footnote = e.footnote {
+                    Text(footnote).font(.caption).italic()
+                        .foregroundStyle(.white.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
+                }
             }
             .foregroundStyle(.white)
             .padding(30)

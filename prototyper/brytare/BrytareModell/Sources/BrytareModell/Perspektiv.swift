@@ -24,6 +24,8 @@ public struct Ending: Equatable, Sendable {
     public let title: String
     public let text: String
     public let isExtraval: Bool
+    /// En liten rad längst ner (t.ex. brasklappen).
+    public var footnote: String? = nil
 }
 
 public protocol PerspectiveGame: Sendable {

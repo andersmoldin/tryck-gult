@@ -58,8 +58,8 @@ public let speakerScript: [SpeakerStep] = [
         extras: [SpeakerCard(action: .probe, title: "Sonderingsrunda",
                              quip: "Åtta partiledare, åtta kaffekoppar, ett besked: ”vi återkommer”.")],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "Störst parti först. S påminner gärna om det.",
-                    .kristersson: "Regeringen sitter kvar och tycker att det har gått bra hittills."]),
+        voteQuips: [.andersson: "Störst parti först. S har 99 mandat och en tradition att luta sig mot.",
+                    .kristersson: "Regeringen sitter kvar under tiden. Det är så det fungerar."]),
     SpeakerStep(
         situation: "SD vill inte längre ha ministrar, bara inflytande. Det låter som en nedgradering. Det är det inte.",
         extras: [SpeakerCard(action: .mission(.kristersson), title: "Förhandlingsuppdrag till Kristersson",
@@ -68,12 +68,10 @@ public let speakerScript: [SpeakerStep] = [
         voteQuips: [.kristersson: "SD trycker gult. Gult är den nya färgen för ”ja, men”.",
                     .andersson: "V väntar fortfarande på sina ministerposter. V väntar gärna."]),
     SpeakerStep(
-        situation: "C vill ha ett totalpaket från båda sidor och har satt en deadline. Det är ovanligt att vågmästaren sätter deadline åt talmannen. Det är ovanligt mycket i år.",
+        situation: "C vill ha ett totalpaket från båda sidor och har satt en deadline för dem. Talmannen har ingen deadline. Än.",
         extras: [SpeakerCard(action: .deadline, title: "Sätt en egen deadline",
-                             quip: "Om C får ha en deadline får du också ha en."),
-                 SpeakerCard(action: .probe, title: "Vänta på C:s fredag",
-                             quip: "C läser paketen. Båda sidor har skrivit ”förhandlingsbart” i marginalen.")],
-        votes: [.andersson],
+                             quip: "Om C får ha en deadline får du också ha en.")],
+        votes: [.andersson, .kristersson],
         voteQuips: [.andersson: "Rödgröna plus C. Det är en majoritet om C vill. C vill ha ett paket först.",
                     .kristersson: "M, KD och L har ett paket. C har inte öppnat det."]),
     SpeakerStep(
@@ -84,25 +82,25 @@ public let speakerScript: [SpeakerStep] = [
         voteQuips: [.andersson: "V röstar nej av princip. S kallar det ansvarslöst. V kallar det samma sak.",
                     .kristersson: "L och SD har hittat ett sätt att tycka olika tillsammans."]),
     SpeakerStep(
-        situation: "C har valt S:s totalpaket. M säger att det är synd om C. C säger att det är synd om M.",
+        situation: "C har valt S:s totalpaket. Vågmästaren har vägt. Vågen står still.",
         extras: [SpeakerCard(action: .meeting, title: "Kalla S och V till ditt kontor",
                              quip: "Du bjuder på kaffe. Ingen dricker.")],
         votes: [.andersson, .kristersson],
         voteQuips: [.andersson: "S + MP + C. Det är en majoritet om man räknar generöst.",
-                    .kristersson: "KD noterar att ingen frågade KD. KD är van."]),
+                    .kristersson: "KD har 22 mandat och ett tydligt krav: Kristersson. Det räcker inte heller."]),
     SpeakerStep(
         situation: "S och V har mötts i två timmar. Beskedet var detsamma som tidigare, vilket i sig är ett slags besked.",
         extras: [SpeakerCard(action: .probe, title: "Sonderingsrunda igen",
-                             quip: "Samma kaffe, samma partiledare. MP har tagit med egen kopp.")],
+                             quip: "Samma kaffe, samma frågor. MP svarar som S. Det är det enda som är enkelt.")],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "S har 146. S har haft 146 sedan C bestämde sig.",
+        voteQuips: [.andersson: "S, MP och C har 146. De har haft 146 sedan C bestämde sig.",
                     .kristersson: "SD trycker gult igen. Det börjar likna en vana."]),
     SpeakerStep(
         situation: "C säger nej till V i regeringen, även om alternativet är extraval. Alternativet hörde det.",
         extras: [],
         votes: [.andersson, .kristersson],
         voteQuips: [.andersson: "V röstar nej. C röstar ja. S röstar på sig själv. Det räcker inte.",
-                    .kristersson: "M har fortfarande 173. M har haft 173 länge nu."]),
+                    .kristersson: "M, KD, L och SD har fortfarande 173. De har haft 173 länge nu."]),
 ]
 
 public struct SpeakerGame: PerspectiveGame {
@@ -110,12 +108,22 @@ public struct SpeakerGame: PerspectiveGame {
     public static let role = "Du är talmannen. Välj vem som får försöka – och när. Undvik extraval."
     public static let tips = [
         "Du föreslår statsminister och riksdagen röstar. Det brukar gå bra. I år gick det inte.",
-        "Riksdagens tålamod är hur länge riksdagen står ut med att du inte röstar. Varje vecka du sonderar, ger uppdrag eller håller möte kostar ett streck. När strecken är slut måste du hålla omröstning direkt.",
+        "Riksdagens tålamod är hur länge riksdagen står ut med att du inte röstar. Varje vecka du sonderar, ger uppdrag eller håller möte kostar ett streck. När strecken är slut finns bara omröstningar kvar.",
         "Stödet är okänt tills du sonderat. Att ta reda på kostar tålamod. Att gissa kostar försök. Fyra fallna omröstningar ger extraval.",
-        "Alla rubriker i spelet är verkliga. Vi hittade inte på dem. Vi hade inte behövt.",
+        disclaimer,
     ]
 
     private static let maxPatience = 3
+    private static let disclaimer = "Alla rubriker i spelet är verkliga. Vi hittade inte på dem. Vi hade inte behövt."
+
+    /// Vad spelaren vet om en kandidats stöd, och varifrån.
+    private struct Knowledge {
+        /// Rubrikindex när stödet mättes.
+        let at: Int
+        let support: Int
+        /// "sonderingen", "uppdraget" eller "omröstningen".
+        let source: String
+    }
 
     private var turns = Turns()
     public private(set) var attemptsLeft = 4
@@ -124,8 +132,7 @@ public struct SpeakerGame: PerspectiveGame {
     public private(set) var talksContinue = 0
     /// Spelarens egen deadline har gått ut: nästa val måste vara en omröstning.
     private var mustVote = false
-    /// Vad spelaren vet om stödet: när det mättes (rubrikindex) och hur stort det var.
-    private var known: [Candidate: (at: Int, support: Int)] = [:]
+    private var known: [Candidate: Knowledge] = [:]
     /// Det försök som kom närmast 175, för slutskärmen.
     private var closest: (candidate: Candidate, support: Int)?
 
@@ -167,11 +174,11 @@ public struct SpeakerGame: PerspectiveGame {
         switch card.action {
         case .probe:
             stall()
-            learn(Candidate.allCases)
+            learn(Candidate.allCases, from: "sonderingen")
             turns.resolve("Sonderingen tog en vecka. Under tiden kom en ny rubrik. Sedan visste du: \(knownText(Candidate.allCases)).")
         case .mission(let c):
             stall()
-            learn([c])
+            learn([c], from: "uppdraget")
             turns.resolve("Förhandlingsuppdraget tog en vecka. Under tiden kom en ny rubrik. Sedan visste du: \(knownText([c])).")
         case .meeting:
             stall()
@@ -194,9 +201,9 @@ public struct SpeakerGame: PerspectiveGame {
     }
 
     /// Stödet mäts som det är efter veckan, alltså efter nästa rubrik.
-    private mutating func learn(_ candidates: [Candidate]) {
+    private mutating func learn(_ candidates: [Candidate], from source: String) {
         let at = min(headlineIndex + 1, timelineEnd)
-        for c in candidates { known[c] = (at, support(c, at: at)) }
+        for c in candidates { known[c] = Knowledge(at: at, support: support(c, at: at), source: source) }
     }
 
     private func knownText(_ candidates: [Candidate]) -> String {
@@ -206,6 +213,7 @@ public struct SpeakerGame: PerspectiveGame {
     private mutating func vote(_ c: Candidate) {
         mustVote = false
         let r = tally(historicVotes(for: c, after: headlineIndex))
+        known[c] = Knowledge(at: headlineIndex, support: r.supportSeats, source: "omröstningen")
         if r.supportSeats > (closest?.support ?? -1) { closest = (c, r.supportSeats) }
         if r.passed {
             turns.resolve(voteText(r), ending: Ending(title: "REGERING", text: "\(c.name) blev statsminister.", isExtraval: false))
@@ -222,12 +230,14 @@ public struct SpeakerGame: PerspectiveGame {
 
     private func cost(of action: SpeakerAction) -> String {
         let after = "(\(patience - 1) kvar)"
+        let talk = " Samtalen fortsätter +1."
         switch action {
-        case .probe: return "Tålamod −1 \(after). Du får veta exakt stöd för båda."
-        case .mission(let c): return "Tålamod −1 \(after). Du får veta exakt stöd för \(c.surname)."
-        case .meeting: return "Tålamod −1 \(after). Inget nytt besked – men samtalen fortsätter."
+        case .probe: return "Tålamod −1 \(after). Du får veta exakt stöd för båda." + talk
+        case .mission(let c): return "Tålamod −1 \(after). Du får veta exakt stöd för \(c.surname)." + talk
+        case .meeting: return "Tålamod −1 \(after). Inget nytt besked." + talk
         case .deadline:
-            return "Tålamod +1 (\(min(Self.maxPatience, patience + 1)) kvar). Men nästa vecka måste du hålla omröstning."
+            let gain = patience < Self.maxPatience ? "Tålamod +1 (\(patience + 1) kvar)." : "Tålamodet är redan fullt."
+            return gain + " Men nästa vecka måste du hålla omröstning." + talk
         case .vote(let c):
             let fails = "faller den går ett av fyra försök."
             guard let k = known[c] else { return "Omröstning. Stöd okänt – \(fails)" }
@@ -235,7 +245,7 @@ public struct SpeakerGame: PerspectiveGame {
                 let passes = k.support >= majority
                 return "Omröstning. \(k.support) av \(majority) enligt sonderingen – " + (passes ? "går igenom." : fails)
             }
-            return "Omröstning. \(k.support) vid sonderingen \(BrytareModell.headline(after: k.at).date) – kan ha ändrats. Faller den går ett av fyra försök."
+            return "Omröstning. \(k.support) vid \(k.source) \(BrytareModell.headline(after: k.at).date) – kan ha ändrats. Faller den går ett av fyra försök."
         }
     }
 
@@ -266,6 +276,6 @@ public struct SpeakerGame: PerspectiveGame {
         default: verdict = "mycket lyssnande."
         }
         text += " Du sa ”samtalen fortsätter” \(talksContinue) \(talksContinue == 1 ? "gång" : "gånger"). Omdöme: \(verdict)"
-        return Ending(title: "EXTRAVAL", text: text, isExtraval: true)
+        return Ending(title: "EXTRAVAL", text: text, isExtraval: true, footnote: Self.disclaimer)
     }
 }

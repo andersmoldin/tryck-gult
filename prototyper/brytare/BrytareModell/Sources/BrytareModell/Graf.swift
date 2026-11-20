@@ -24,6 +24,16 @@ public func keyRelations(after h: Int) -> [KeyRelation] {
     .sorted { ($0.pair.a.rawValue, $0.pair.b.rawValue) < ($1.pair.a.rawValue, $1.pair.b.rawValue) }
 }
 
+/// Linjer som fanns före rubrik h men som rubriken tog bort.
+public func removedRelations(after h: Int) -> [KeyRelation] {
+    guard h > 0 else { return [] }
+    let now = relationState(after: h)
+    return relationState(after: h - 1)
+        .filter { now[$0.key] == nil }
+        .map { KeyRelation(pair: $0.key, kind: $0.value.kind, label: $0.value.label, isNew: true) }
+        .sorted { ($0.pair.a.rawValue, $0.pair.b.rawValue) < ($1.pair.a.rawValue, $1.pair.b.rawValue) }
+}
+
 private struct RelationValue: Equatable {
     let kind: RelationKind
     let label: String
@@ -34,6 +44,7 @@ private func relationState(after h: Int) -> [Pair: RelationValue] {
     var r: [Pair: RelationValue] = [
         Pair(.S, .V): v(.attraction, "Rödgröna – V vill ha ministrar"),
         Pair(.S, .MP): v(.attraction, "Rödgröna"),
+        Pair(.S, .M): v(.conflict, "Två statsministerkandidater"),
         Pair(.M, .KD): v(.attraction, "Kristerssons sida"),
         Pair(.M, .L): v(.attraction, "Kristerssons sida"),
         Pair(.M, .SD): v(.attraction, "SD vill ha ministrar"),
@@ -46,8 +57,8 @@ private func relationState(after h: Int) -> [Pair: RelationValue] {
         r[Pair(.M, .SD)] = v(.attraction, "SD tolererar Kristersson")
     }
     if h >= 2 {
-        r[Pair(.C, .S)] = v(.negotiating, "C vill ha totalpaket")
-        r[Pair(.C, .M)] = v(.negotiating, "C vill ha totalpaket")
+        r[Pair(.C, .S)] = v(.negotiating, "C vill ha totalpaket av S")
+        r[Pair(.C, .M)] = v(.negotiating, "C vill ha totalpaket av M")
     }
     if h >= 3 {
         r[Pair(.S, .V)] = v(.conflict, "S: V utanför regeringen")

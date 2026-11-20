@@ -7,7 +7,7 @@ struct SpeakerGameTests {
     func start() {
         let g = SpeakerGame()
         #expect(g.choices.map(\.id) == ["probe", "vote.andersson", "vote.kristersson"])
-        #expect(g.choices[0].cost == "Tålamod −1 (2 kvar). Du får veta exakt stöd för båda.")
+        #expect(g.choices[0].cost == "Tålamod −1 (2 kvar). Du får veta exakt stöd för båda. Samtalen fortsätter +1.")
         #expect(g.choices[1].cost == "Omröstning. Stöd okänt – faller den går ett av fyra försök.")
         #expect(g.choices.allSatisfy { ($0.quip ?? "").isEmpty == false })
         let patience = g.meters.first { $0.name == "Riksdagens tålamod" }
@@ -37,13 +37,33 @@ struct SpeakerGameTests {
         #expect(a?.cost == "Omröstning. 151 vid sonderingen 6 nov – kan ha ändrats. Faller den går ett av fyra försök.")
     }
 
+    @Test("Ett omröstningsresultat glöms inte, men märks som osäkert efter nästa rubrik")
+    func minnsOmrostning() {
+        var g = SpeakerGame()
+        g.choose("probe"); g.proceed()                       // rubrik 1
+        g.choose("vote.kristersson"); g.proceed()            // 173 faller, rubrik 2
+        let k = g.choices.first { $0.id == "vote.kristersson" }
+        #expect(k?.cost == "Omröstning. 173 vid omröstningen 6 nov – kan ha ändrats. Faller den går ett av fyra försök.")
+    }
+
+    @Test("Deadline när tålamodet redan är fullt säger det")
+    func deadlineFullt() {
+        var g = SpeakerGame()
+        g.choose("vote.andersson"); g.proceed()
+        g.choose("vote.kristersson"); g.proceed()            // rubrik 2, tålamod 3
+        let d = g.choices.first { $0.id == "deadline" }
+        #expect(d?.cost == "Tålamodet är redan fullt. Men nästa vecka måste du hålla omröstning. Samtalen fortsätter +1.")
+    }
+
     @Test("När tålamodet är slut finns bara omröstningar kvar")
     func talamodSlut() {
         var g = SpeakerGame()
         g.choose("probe"); g.proceed()
         g.choose("mission.kristersson"); g.proceed()
-        g.choose("probe"); g.proceed()
+        g.choose("vote.andersson"); g.proceed()
+        g.choose("mission.andersson"); g.proceed()
         #expect(g.patience == 0)
+        #expect(g.headlineIndex == 4)
         #expect(g.choices.map(\.id) == ["vote.andersson", "vote.kristersson"])
         #expect(g.question.hasPrefix("Tålamodet är slut. Riksdagen kräver omröstning – nu."))
     }
@@ -79,6 +99,14 @@ struct SpeakerGameTests {
         g.choose("vote.kristersson"); g.proceed()
         #expect(g.ending?.isExtraval == true)
         #expect(g.ending?.text == "Ingen fick ihop 175. Närmast kom Kristersson (M) med 173 – 2 mandat för lite. Du sa ”samtalen fortsätter” 1 gång. Omdöme: handlingskraftig. Det hjälpte inte.")
+        #expect(g.ending?.footnote == "Alla rubriker i spelet är verkliga. Vi hittade inte på dem. Vi hade inte behövt.")
+    }
+
+    @Test("Varje steg har 2–3 val så länge inget tvingar fram en omröstning")
+    func tvaTillTre() {
+        for (h, step) in speakerScript.enumerated() {
+            #expect((2...3).contains(step.extras.count + step.votes.count), "steg \(h)")
+        }
     }
 
     @Test("Reta alla lika mycket: varje parti får en kvickhet")

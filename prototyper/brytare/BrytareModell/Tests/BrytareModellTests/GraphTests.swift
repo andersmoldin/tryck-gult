@@ -29,12 +29,21 @@ struct GraphTests {
     func rubriker() {
         #expect(rel(1, .SD, .L) == nil)
         #expect(rel(2, .C, .S)?.kind == .negotiating)
+        #expect(rel(2, .C, .S)?.label != rel(2, .C, .M)?.label)
+        #expect(rel(0, .S, .M)?.kind == .conflict)
         #expect(rel(3, .S, .V)?.kind == .conflict)
         #expect(rel(3, .S, .V)?.isNew == true)
         #expect(rel(4, .C, .S)?.kind == .attraction)
         #expect(rel(4, .C, .M)?.kind == .conflict)
         #expect(rel(4, .V, .C)?.isNew == false)
         #expect(rel(6, .V, .C)?.isNew == true)
+    }
+
+    @Test("Linjer som en rubrik tar bort går att visa")
+    func borttagna() {
+        #expect(removedRelations(after: 0).isEmpty)
+        #expect(removedRelations(after: 1).map(\.pair) == [Pair(.SD, .L)])
+        #expect(removedRelations(after: 2).isEmpty)
     }
 
     func settled(after h: Int, steps: Int = 900) -> GraphLayout {
