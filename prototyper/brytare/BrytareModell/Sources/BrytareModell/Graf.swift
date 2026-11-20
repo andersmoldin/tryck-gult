@@ -79,6 +79,41 @@ private func relationState(after h: Int) -> [Pair: RelationValue] {
 public struct Point: Equatable, Sendable {
     public var x: Double
     public var y: Double
+
+    public func distance(to o: Point) -> Double { ((x - o.x) * (x - o.x) + (y - o.y) * (y - o.y)).squareRoot() }
+    /// Punkten en andel `t` av vägen härifrån mot `o`.
+    public func toward(_ o: Point, _ t: Double) -> Point { Point(x: x + (o.x - x) * t, y: y + (o.y - y) * t) }
+}
+
+/// Storlekarna i talmannens nätverk, i grafens enheter (rutan [-1, 1]). Appen ritar med samma tal,
+/// så testerna av att inget överlappar gäller det som syns på skärmen.
+public enum WideGraphMetrics {
+    public static func nodeRadius(_ p: P) -> Double { 0.085 + Double(p.seats).squareRoot() * 0.008 }
+    /// Radien på emojins bakgrundsskiva.
+    public static let emojiRadius = 0.1
+    /// Minsta luft mellan två saker.
+    public static let margin = 0.02
+}
+
+/// Var emojin på varje linje ska sitta: så nära mitten som möjligt, men flyttad längs linjen
+/// om den annars skulle krocka med ett parti eller en annan emoji.
+public func emojiPositions(_ layout: GraphLayout, _ lines: [KeyRelation]) -> [Pair: Point] {
+    typealias M = WideGraphMetrics
+    // Mitten först, sedan växelvis utåt mot ändarna.
+    let candidates = [0.5] + stride(from: 0.04, through: 0.3, by: 0.04).flatMap { [0.5 - $0, 0.5 + $0] }
+    var placed: [Pair: Point] = [:]
+    func clearance(_ e: Point) -> Double {
+        let nodes = P.allCases.map { e.distance(to: layout.positions[$0]!) - M.nodeRadius($0) - M.emojiRadius }
+        let emojis = placed.values.map { e.distance(to: $0) - 2 * M.emojiRadius }
+        return (nodes + emojis).min() ?? .infinity
+    }
+    // Korta linjer har minst utrymme att flytta emojin på, så de får välja först.
+    for line in lines.sorted(by: { layout.distance($0.pair.a, $0.pair.b) < layout.distance($1.pair.a, $1.pair.b) }) {
+        let a = layout.positions[line.pair.a]!, b = layout.positions[line.pair.b]!
+        let spots = candidates.map { a.toward(b, $0) }
+        placed[line.pair] = spots.first { clearance($0) >= M.margin } ?? spots.max { clearance($0) < clearance($1) }!
+    }
+    return placed
 }
 
 public struct GraphLayout: Sendable {
@@ -95,8 +130,10 @@ public struct GraphLayout: Sendable {
         var conflictLength: Double
         var conflictStrength: Double
         var gravity: Double
-        /// Knuffar partier bort från mitten av linjer de inte hör till (där emojin sitter).
-        var midpointRepulsion: Double
+        /// Knuffar partier bort från linjer de inte hör till (där emojin sitter), så att ingen nod ligger på en linje.
+        var lineRepulsion: Double
+        /// Håll hela noden (med radie) inom ramen, inte bara mittpunkten.
+        var keepDiscInside = false
         var damping = 0.85
     }
 
@@ -110,11 +147,11 @@ public struct GraphLayout: Sendable {
         case .standard:
             forces = Forces(repulsion: 0.03, allyLength: 0.4, allyStrength: 4, negotiatingLength: 0.7,
                             negotiatingStrength: 1.5, conflictLength: 1.3, conflictStrength: 2, gravity: 0.6,
-                            midpointRepulsion: 0)
+                            lineRepulsion: 0)
         case .wide:
             forces = Forces(repulsion: 0.09, allyLength: 0.6, allyStrength: 3, negotiatingLength: 0.85,
                             negotiatingStrength: 1.5, conflictLength: 1.5, conflictStrength: 2, gravity: 0.35,
-                            midpointRepulsion: 0.02)
+                            lineRepulsion: 0.02, keepDiscInside: true)
         }
         var pos: [P: Point] = [:]
         for (i, p) in leftToRight.enumerated() {
@@ -165,20 +202,24 @@ public struct GraphLayout: Sendable {
                 push(b, -pull * dx / d, -pull * dy / d)
             }
         }
-        if f.midpointRepulsion > 0 {
+        if f.lineRepulsion > 0 {
             for line in relations {
                 let a = positions[line.pair.a]!, b = positions[line.pair.b]!
-                let m = Point(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
+                let abx = b.x - a.x, aby = b.y - a.y
+                let len2 = max(abx * abx + aby * aby, 1e-6)
                 for p in parties where p != line.pair.a && p != line.pair.b {
                     let pos = positions[p]!
-                    var dx = pos.x - m.x, dy = pos.y - m.y
+                    // Närmaste punkt på linjen.
+                    let t = min(1, max(0, ((pos.x - a.x) * abx + (pos.y - a.y) * aby) / len2))
+                    let q = a.toward(b, t)
+                    var dx = pos.x - q.x, dy = pos.y - q.y
                     var d = (dx * dx + dy * dy).squareRoot()
-                    if d < 0.01 { dx = 0.01; dy = 0; d = 0.01 }
-                    let away = f.midpointRepulsion / (d * d)
+                    if d < 0.01 { dx = -aby; dy = abx; d = max((dx * dx + dy * dy).squareRoot(), 1e-6) }
+                    let away = f.lineRepulsion / max(d * d, 0.0025)
                     push(p, away * dx / d, away * dy / d)
-                    // Linjens ändar får motkraften, så att hela linjen flyttar sig.
-                    push(line.pair.a, -away * dx / d / 2, -away * dy / d / 2)
-                    push(line.pair.b, -away * dx / d / 2, -away * dy / d / 2)
+                    // Linjens ändar får motkraften i proportion till var på linjen trycket sitter.
+                    push(line.pair.a, -away * dx / d * (1 - t), -away * dy / d * (1 - t))
+                    push(line.pair.b, -away * dx / d * t, -away * dy / d * t)
                 }
             }
         }
@@ -187,8 +228,9 @@ public struct GraphLayout: Sendable {
             var pos = positions[p]!
             v.x = (v.x + (force[p]!.x - f.gravity * pos.x) * dt) * f.damping
             v.y = (v.y + (force[p]!.y - f.gravity * pos.y) * dt) * f.damping
-            pos.x = min(1, max(-1, pos.x + v.x))
-            pos.y = min(1, max(-1, pos.y + v.y))
+            let limit = f.keepDiscInside ? 1 - WideGraphMetrics.nodeRadius(p) : 1
+            pos.x = min(limit, max(-limit, pos.x + v.x))
+            pos.y = min(limit, max(-limit, pos.y + v.y))
             velocities[p] = v
             positions[p] = pos
         }

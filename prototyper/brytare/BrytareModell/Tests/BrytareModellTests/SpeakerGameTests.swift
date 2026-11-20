@@ -162,7 +162,7 @@ struct SpeakerGameTests {
     @Test("Kvickheterna avslöjar inte stödet i förväg")
     func ingaSiffror() {
         let quips = speakerScript.flatMap { $0.cards.map(\.quip) }
-        for n in ["146", "151", "121", "111", "173", "majoritet"] {
+        for n in ["146", "151", "121", "111", "173", "majoritet", "nej", "räcker inte"] {
             #expect(!quips.contains { $0.contains(n) }, "\(n)")
         }
     }

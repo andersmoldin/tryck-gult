@@ -20,7 +20,7 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
                 if G.self == SpeakerGame.self {
                     // Talmannen: situationen först, sedan ett stort nätverk med emojis på linjerna.
                     card
-                    GraphView(headlineIndex: game.headlineIndex, emojis: true)
+                    GraphView(headlineIndex: game.headlineIndex, mode: .emojis)
                         .frame(height: 360)
                     EmojiLegend()
                 } else {
@@ -151,7 +151,7 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
                 }
             }
             Text(G.self == SpeakerGame.self
-                 ? "Nätverket: 🤝 samarbete, 💬 förhandlar, ✋ röd linje. Tjock linje = ändrades av senaste rubriken. Vad dina val kostar ser du först efteråt."
+                 ? "Nätverket: \(RelationKind.attraction.emoji) samarbete, \(RelationKind.negotiating.emoji) förhandlar, \(RelationKind.conflict.emoji) röd linje. Tjock linje och orange ring = ändrades av senaste rubriken. Vad dina val kostar ser du först efteråt."
                  : "Grafen: vita linjer drar ihop partier, gula förhandlar, röda är konflikter. Tjock linje = ändrades av senaste rubriken. Tryck på grafen för att se den stor, med förklaringar.")
                 .font(.footnote).foregroundStyle(.secondary)
             Button {

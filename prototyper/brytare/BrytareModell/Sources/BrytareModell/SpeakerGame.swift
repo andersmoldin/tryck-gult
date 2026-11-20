@@ -79,7 +79,7 @@ public let speakerScript: [SpeakerStep] = [
         extras: [SpeakerCard(action: .mission(.andersson), title: "Ge Andersson en vecka att förhandla",
                              quip: "S ska övertyga V om att utanför är bra.")],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "V röstar nej av princip.",
+        voteQuips: [.andersson: "V har principer. S har en plan.",
                     .kristersson: "L och SD tycker olika, tillsammans."]),
     SpeakerStep(
         situation: "C har valt S:s totalpaket. Vågmästaren har vägt. Vågen står still.",
@@ -99,7 +99,7 @@ public let speakerScript: [SpeakerStep] = [
         situation: "C säger nej till V i regeringen, även om alternativet är extraval. Alternativet hörde det.",
         extras: [],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "C säger ja, V säger nej. Det räcker inte.",
+        voteQuips: [.andersson: "Samma partier, samma krav, ny vecka.",
                     .kristersson: "Samma fyra partier som förra veckan."]),
 ]
 

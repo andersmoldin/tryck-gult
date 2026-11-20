@@ -85,57 +85,92 @@ struct GraphTests {
 
 @Suite("Talmannens breda nätverk")
 struct WideGraphTests {
-    func settled(after h: Int) -> GraphLayout {
+    typealias M = WideGraphMetrics
+
+    /// Grafen så som appen kör den: samma layout byggs vidare rubrik för rubrik, med en knuff vid varje ny rubrik.
+    func replay(_ check: (Int, GraphLayout) -> Void) {
         var layout = GraphLayout(style: .wide)
-        let r = keyRelations(after: h)
-        for _ in 0..<1500 { layout.step(r) }
-        return layout
-    }
-
-    func midpoint(_ l: GraphLayout, _ pair: Pair) -> Point {
-        let a = l.positions[pair.a]!, b = l.positions[pair.b]!
-        return Point(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
-    }
-
-    func dist(_ a: Point, _ b: Point) -> Double { ((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)).squareRoot() }
-
-    @Test("Partierna står långt isär efter varje rubrik")
-    func isar() {
         for h in 0...timelineEnd {
-            let l = settled(after: h)
+            if h > 0 { layout.nudge() }
+            let lines = keyRelations(after: h)
+            for _ in 0..<900 { layout.step(lines) }
+            check(h, layout)
+        }
+    }
+
+    @Test("Partierna överlappar aldrig, med marginal")
+    func isar() {
+        replay { h, l in
             for (i, a) in P.allCases.enumerated() {
                 for b in P.allCases.dropFirst(i + 1) {
-                    #expect(l.distance(a, b) >= 0.5, "rubrik \(h): \(a.rawValue)–\(b.rawValue) \(l.distance(a, b))")
+                    let need = M.nodeRadius(a) + M.nodeRadius(b) + M.margin
+                    #expect(l.distance(a, b) >= need, "rubrik \(h): \(a.rawValue)–\(b.rawValue)")
                 }
             }
         }
     }
 
-    @Test("Emojin mitt på en linje krockar varken med partierna eller med andra emojier")
+    @Test("Emojierna krockar varken med partierna eller med varandra")
     func emojier() {
-        for h in 0...timelineEnd {
-            let l = settled(after: h)
+        replay { h, l in
             let lines = keyRelations(after: h)
-            let mids = lines.map { midpoint(l, $0.pair) }
-            for (m, line) in zip(mids, lines) {
-                for p in P.allCases where p != line.pair.a && p != line.pair.b {
-                    #expect(dist(m, l.positions[p]!) >= 0.26, "rubrik \(h): \(line.pair) mot \(p.rawValue)")
+            let spots = emojiPositions(l, lines)
+            #expect(spots.count == lines.count)
+            for line in lines {
+                let e = spots[line.pair]!
+                for p in P.allCases {
+                    let need = M.nodeRadius(p) + M.emojiRadius + M.margin
+                    #expect(e.distance(to: l.positions[p]!) >= need, "rubrik \(h): \(line.pair) mot \(p.rawValue)")
                 }
             }
-            for i in mids.indices {
-                for j in mids.indices where j > i {
-                    #expect(dist(mids[i], mids[j]) >= 0.16, "rubrik \(h): \(lines[i].pair) mot \(lines[j].pair)")
+            let all = Array(spots.values)
+            for i in all.indices {
+                for j in all.indices where j > i {
+                    #expect(all[i].distance(to: all[j]) >= 2 * M.emojiRadius + M.margin, "rubrik \(h)")
                 }
             }
         }
     }
 
-    @Test("En knuff flyttar noderna, och de lägger sig igen")
+    @Test("Partierna och emojierna ryms inom ramen")
+    func inomRamen() {
+        replay { h, l in
+            for p in P.allCases {
+                let pos = l.positions[p]!, r = M.nodeRadius(p)
+                #expect(abs(pos.x) + r <= 1 && abs(pos.y) + r <= 1, "rubrik \(h): \(p.rawValue)")
+            }
+            for e in emojiPositions(l, keyRelations(after: h)).values {
+                #expect(abs(e.x) + M.emojiRadius <= 1 && abs(e.y) + M.emojiRadius <= 1, "rubrik \(h)")
+            }
+        }
+    }
+
+    @Test("Emojin ligger på sin linje")
+    func paLinjen() {
+        replay { h, l in
+            for line in keyRelations(after: h) {
+                let a = l.positions[line.pair.a]!, b = l.positions[line.pair.b]!
+                let e = emojiPositions(l, keyRelations(after: h))[line.pair]!
+                let off = a.distance(to: e) + e.distance(to: b) - a.distance(to: b)
+                #expect(off < 0.001, "rubrik \(h): \(line.pair)")
+            }
+        }
+    }
+
+    @Test("En knuff flyttar noderna mer än ett vanligt steg, och de lägger sig igen")
     func knuff() {
-        var l = settled(after: 3)
-        let before = l.positions
-        l.nudge()
-        l.step(keyRelations(after: 3))
-        #expect(P.allCases.contains { dist(l.positions[$0]!, before[$0]!) > 0.005 })
+        var still = GraphLayout(style: .wide)
+        let lines = keyRelations(after: 3)
+        for _ in 0..<900 { still.step(lines) }
+        var nudged = still
+        var plain = still
+        nudged.nudge(); nudged.step(lines)
+        plain.step(lines)
+        #expect(P.allCases.contains { nudged.positions[$0]!.distance(to: plain.positions[$0]!) > 0.01 })
+        // Krafterna bryr sig inte om rotation, så grafen kan lägga sig vriden – men den ska komma till vila.
+        for _ in 0..<900 { nudged.step(lines) }
+        let rested = nudged.positions
+        nudged.step(lines)
+        for p in P.allCases { #expect(nudged.positions[p]!.distance(to: rested[p]!) < 0.001) }
     }
 }
