@@ -9,7 +9,7 @@ struct CandidateGameTests {
         #expect(g.headlineIndex == 0)
         #expect(g.choices.map(\.id) == ["promiseV", "promiseC", "wait"])
         #expect(g.choices[0].cost == "V röstar ja, C röstar nej → 151 av 175")
-        #expect(g.choices[1].cost == "C röstar ja, V röstar nej → 146 av 175")
+        #expect(g.choices[1].cost == "C röstar nej (väntar på totalpaketet), V röstar nej → 121 av 175")
         #expect(g.meters.first == Meter(name: "Försök kvar", value: "4 av 4"))
         #expect(g.outcome == nil)
         #expect(g.ending == nil)
@@ -34,6 +34,16 @@ struct CandidateGameTests {
         #expect(g.attemptsLeft == 4)
         g.proceed()
         #expect(g.headlineIndex == 1)
+    }
+
+    @Test("När C har valt S:s totalpaket röstar C ja på löftet")
+    func totalpaketet() {
+        var g = CandidateGame()
+        for _ in 0..<4 { g.choose("wait"); g.proceed() }
+        #expect(g.headlineIndex == 4)
+        #expect(g.choices[1].cost == "C röstar ja, V röstar nej → 146 av 175")
+        g.choose("promiseC")
+        #expect(g.outcome == "Omröstningen faller: 146 stöd, 203 nej. V röstade nej – V kräver ministerposter.")
     }
 
     @Test("Vid sista rubriken går det inte att vänta längre")

@@ -35,7 +35,8 @@ public func historicVotes(for candidate: Candidate, after h: Int) -> [P: Vote] {
         votes[.KD] = .ja
         votes[.L] = .ja                   // Kristersson utan SD-ministrar
         votes[.SD] = h < 1 ? .nej : .gult // SD kräver ministrar tills rubrik 1
-        // C röstar nej hela vägen: först väntar C på ett totalpaket, sedan väljer C S:s.
+        // C röstar nej hela vägen. Rubrik 1 och 2 kom samma dag (6 nov): när SD släppte
+        // ministerkravet krävde C samtidigt ett totalpaket, och i rubrik 4 valde C S:s.
     }
     return votes
 }

@@ -7,6 +7,7 @@ public struct CandidateGame: PerspectiveGame {
     public static let tips = [
         "Du har S (99) och MP (22). Det är 121 – du behöver 175 som röstar ja eller gult.",
         "V (30) och C (25) räcker precis. Varje löfte visar hur många du får.",
+        "C väntar på ett totalpaket. Att vänta kostar ingen omröstning.",
         "Fyra fallna omröstningar ger extraval.",
     ]
 
@@ -30,7 +31,8 @@ public struct CandidateGame: PerspectiveGame {
             Choice(id: "promiseV", title: "Lova V ministerposter",
                    cost: "V röstar ja, C röstar nej → \(supportText(result(promiseToV: true)))"),
             Choice(id: "promiseC", title: "Lova C att V hålls utanför",
-                   cost: "C röstar ja, V röstar nej → \(supportText(result(promiseToV: false)))"),
+                   cost: (cWaitsForPackage ? "C röstar nej (väntar på totalpaketet)" : "C röstar ja")
+                       + ", V röstar nej → \(supportText(result(promiseToV: false)))"),
         ]
         if !turns.isLastHeadline {
             list.append(Choice(id: "wait", title: "Vänta en vecka",
@@ -49,17 +51,21 @@ public struct CandidateGame: PerspectiveGame {
             let r = result(promiseToV: toV)
             if !r.passed { attemptsLeft -= 1 }
             let why = toV ? "C röstade nej – C vill inte ha V i regeringen."
-                          : "V röstade nej – V kräver ministerposter."
+                : cWaitsForPackage ? "C och V röstade nej – C väntar på totalpaketet och V kräver ministerposter."
+                : "V röstade nej – V kräver ministerposter."
             turns.resolve(voteText(r) + " " + why, ending: attemptsLeft == 0 ? Self.extraval : nil)
         }
     }
 
     public mutating func proceed() { turns.proceed() }
 
+    /// C väljer S:s totalpaket först i rubrik 4; före det röstar C nej även på löftet.
+    private var cWaitsForPackage: Bool { headlineIndex < 4 }
+
     private func result(promiseToV: Bool) -> VoteResult {
         var votes = historicVotes(for: .andersson, after: 0)
         votes[.V] = promiseToV ? .ja : .nej
-        votes[.C] = promiseToV ? .nej : .ja
+        votes[.C] = promiseToV || cWaitsForPackage ? .nej : .ja
         return tally(votes)
     }
 

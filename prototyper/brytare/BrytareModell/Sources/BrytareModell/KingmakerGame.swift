@@ -6,13 +6,13 @@ public struct KingmakerGame: PerspectiveGame {
     public static let role = "Du leder C. Båda sidor uppvaktar dig. Släpp fram någon – men till vilket pris?"
     public static let tips = [
         "Med dina 25 mandat kan båda sidor nå 175.",
-        "Du har lovat väljarna: inget V och inget SD vid makten. Varje knapp visar om ett löfte bryts.",
+        "Du har lovat väljarna två saker: inget V i regeringen och inget SD-inflytande. Varje knapp visar om ett löfte bryts.",
         "Ställ krav för att vinna mer – men fyra fallna omröstningar ger extraval.",
     ]
 
     private var turns = Turns()
     public private(set) var attemptsLeft = 4
-    public private(set) var promisesKept = 3
+    public private(set) var promisesKept = 2
     public private(set) var demandsWon = 0
 
     public init() {}
@@ -23,7 +23,7 @@ public struct KingmakerGame: PerspectiveGame {
     public var question: String { "Vem släpper du fram?" }
 
     public var meters: [Meter] {
-        [Meter(name: "Löften hållna", value: "\(promisesKept) av 3"),
+        [Meter(name: "Löften hållna", value: "\(promisesKept) av 2"),
          Meter(name: "Krav vunna", value: "\(demandsWon)"),
          Meter(name: "Försök kvar", value: "\(attemptsLeft) av 4")]
     }
@@ -31,10 +31,10 @@ public struct KingmakerGame: PerspectiveGame {
     public var choices: [Choice] {
         guard turns.canChoose else { return [] }
         var list = Candidate.allCases.map { c in
-            let (r, broken) = release(c)
+            let (r, broken, _) = release(c)
             let cost: String
             if r.passed {
-                cost = supportText(r) + " – går igenom" + (broken.map { ", men \($0.cost): löfte brutet" } ?? "")
+                cost = supportText(r) + " – går igenom" + (broken.map { ", men \($0.cost): bryter löftet om \($0.promise)" } ?? "")
             } else {
                 cost = supportText(r) + " – faller, kostar ett försök"
             }
@@ -42,7 +42,7 @@ public struct KingmakerGame: PerspectiveGame {
         }
         if !turns.isLastHeadline {
             list.append(Choice(id: "demand", title: "Kräv mer – vänta på ett bättre bud",
-                               cost: "Ingen omröstning. Krav +1. Nästa rubrik slår ner."))
+                               cost: "Ingen omröstning. Krav +1. Buden kan ändras när nästa rubrik slår ner."))
         }
         return list
     }
@@ -55,12 +55,12 @@ public struct KingmakerGame: PerspectiveGame {
             return
         }
         guard let c = Candidate(rawValue: id) else { return }
-        let (r, broken) = release(c)
+        let (r, broken, whyFailed) = release(c)
         if r.passed {
             var text = "\(c.name) blev statsminister. Du fick igenom \(demandsWon) krav"
             if let broken {
-                promisesKept -= 2
-                text += " – men bröt löftet om \(broken.promise). Löften kvar: \(promisesKept) av 3."
+                promisesKept -= 1
+                text += " – men bröt löftet om \(broken.promise). Löften hållna: \(promisesKept) av 2."
             } else {
                 text += "."
             }
@@ -72,7 +72,7 @@ public struct KingmakerGame: PerspectiveGame {
             title: "EXTRAVAL",
             text: "Du höll alla löften och fick igenom \(demandsWon) krav – men ingen fick ihop 175.",
             isExtraval: true)
-        turns.resolve(voteText(r) + " V röstade nej – V kräver ministerposter.",
+        turns.resolve(voteText(r) + " " + whyFailed,
                       ending: attemptsLeft == 0 ? extraval : nil)
     }
 
@@ -84,24 +84,28 @@ public struct KingmakerGame: PerspectiveGame {
         let cost: String
     }
 
-    /// Hur omröstningen går om C röstar ja, och vilket löfte det i så fall bryter.
-    private func release(_ c: Candidate) -> (VoteResult, BrokenPromise?) {
+    /// Hur omröstningen går om C röstar ja, vilket löfte det i så fall bryter,
+    /// och vem som fäller kandidaten om den faller.
+    private func release(_ c: Candidate) -> (VoteResult, BrokenPromise?, whyFailed: String) {
         var votes = historicVotes(for: c, after: headlineIndex)
         votes[.C] = .ja
         switch c {
         case .andersson:
             let vInside = votes[.V] == .ja
-            return (tally(votes), vInside ? BrokenPromise(promise: "inget V i regeringen",
-                                                          cost: "V kommer in i regeringen") : nil)
+            return (tally(votes),
+                    vInside ? BrokenPromise(promise: "inget V i regeringen", cost: "V kommer in i regeringen") : nil,
+                    "V röstade nej – V kräver ministerposter.")
         case .kristersson:
+            let sdPromise = "inget SD-inflytande"
             if headlineIndex == 0 {
                 // Före rubrik 1 kräver SD ministrar; då vill L inte vara med.
                 votes[.SD] = .ja
                 votes[.L] = .nej
-                return (tally(votes), BrokenPromise(promise: "inget SD i regeringen", cost: "SD får ministrar"))
+                return (tally(votes), BrokenPromise(promise: sdPromise, cost: "SD får ministrar"),
+                        "L röstade nej – L vill inte ha SD-ministrar.")
             }
-            return (tally(votes), BrokenPromise(promise: "inget SD-inflytande",
-                                                cost: "SD släpper fram regeringen"))
+            return (tally(votes), BrokenPromise(promise: sdPromise, cost: "SD släpper fram regeringen"),
+                    "S, V och MP röstade nej.")
         }
     }
 }

@@ -15,7 +15,7 @@ Frågan provspelningen ska besvara: **förstår spelaren varför regeringen föl
 
 ## Innehåll
 
-- `BrytareModell/` – spelmodellen som ett rent Swift-paket utan SwiftUI. Det innehåller mandat, krav, rubriker, 175-regeln och extraval (`Historia.swift`), de fyra spelen (`*Game.swift`, gemensamt protokoll i `Perspektiv.swift`) och grafens linjer och kraftlayout (`Graf.swift`). Brytarvarianten ligger i `Game.swift`.
+- `BrytareModell/` – spelmodellen som ett rent Swift-paket utan SwiftUI. Det innehåller mandat, krav och rubriker, hur partierna röstade längs tidslinjen (`Historia.swift`), de fyra spelen med 175-regeln och extraval (`*Game.swift`, gemensamt protokoll i `Perspektiv.swift`) och grafens linjer och kraftlayout (`Graf.swift`). Brytarvarianten ligger i `Game.swift`.
 - `Brytare/` – SwiftUI-appen. `PerspectiveScreen` visar alla fyra spelen, och `GraphView` ritar grafen.
 - `Brytare.xcodeproj` – Xcode-projektet. Det signeras automatiskt med team `MT5TUADUWK` (Anders Moldin, Personal Team).
 

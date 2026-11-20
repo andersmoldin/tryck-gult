@@ -9,7 +9,7 @@ struct SpeakerGameTests {
         #expect(g.choices.map(\.id) == ["andersson", "kristersson", "wait"])
         #expect(g.choices[0].cost == "151 av 175 – faller, kostar ett försök")
         #expect(g.choices[1].cost == "111 av 175 – faller, kostar ett försök")
-        #expect(g.choices[2].cost == "Tålamod −1 (3 kvar). Nästa rubrik slår ner.")
+        #expect(g.choices[2].cost == "Tålamod −1 (2 kvar efteråt). Nästa rubrik slår ner.")
     }
 
     @Test("Att vänta kostar tålamod, och utan tålamod måste du hålla omröstning")

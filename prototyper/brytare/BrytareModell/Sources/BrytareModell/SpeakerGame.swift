@@ -13,7 +13,8 @@ public struct SpeakerGame: PerspectiveGame {
     private var turns = Turns()
     public private(set) var attemptsLeft = 4
     public private(set) var patience = 3
-    private var best: (Candidate, VoteResult)?
+    /// Det försök som kom närmast 175, för slutskärmen.
+    private var closest: (candidate: Candidate, support: Int)?
 
     public init() {}
 
@@ -37,7 +38,7 @@ public struct SpeakerGame: PerspectiveGame {
         }
         if patience > 0 && !turns.isLastHeadline {
             list.append(Choice(id: "wait", title: "Ge partierna en vecka till",
-                               cost: "Tålamod −1 (\(patience) kvar). Nästa rubrik slår ner."))
+                               cost: "Tålamod −1 (\(patience - 1) kvar efteråt). Nästa rubrik slår ner."))
         }
         return list
     }
@@ -51,7 +52,7 @@ public struct SpeakerGame: PerspectiveGame {
         }
         guard let c = Candidate(rawValue: id) else { return }
         let r = result(for: c)
-        if best == nil || r.supportSeats > best!.1.supportSeats { best = (c, r) }
+        if r.supportSeats > (closest?.support ?? -1) { closest = (c, r.supportSeats) }
         if r.passed {
             turns.resolve(voteText(r), ending: Ending(
                 title: "REGERING", text: "\(c.name) blev statsminister.", isExtraval: false))
@@ -70,9 +71,8 @@ public struct SpeakerGame: PerspectiveGame {
     }
 
     private func extraval() -> Ending {
-        let (c, r) = best!
-        return Ending(title: "EXTRAVAL",
-                      text: "Ingen fick ihop 175. Närmast kom \(c.name) med \(r.supportSeats) – \(majority - r.supportSeats) mandat för lite.",
-                      isExtraval: true)
+        let text = closest.map { "Ingen fick ihop 175. Närmast kom \($0.candidate.name) med \($0.support) – \(majority - $0.support) mandat för lite." }
+            ?? "Ingen fick ihop 175."
+        return Ending(title: "EXTRAVAL", text: text, isExtraval: true)
     }
 }
