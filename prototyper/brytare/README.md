@@ -11,6 +11,8 @@ Alla spelen har samma upplägg. Du gör en sak i taget och väljer mellan 2–3 
 
 Talmannen bygger dessutom in fem ingredienser från genomgången av kortspelet Swärje (namn och bilder är inte lånade): den verkliga rubriken i ett eget kort och kvickheten på valkortet, en torr spelledarröst, poäng som är själva satiren, en omvänd brasklapp ("Alla rubriker i spelet är verkliga. Vi hittade inte på dem. Vi hade inte behövt.") och skrivregeln att reta alla lika mycket.
 
+**Omgång 4 (bara talmannen):** relationerna visas i tre vyer att växla mellan – riksdagens halvcirkel med bågar mellan partierna, en tabell parti × parti med ikoner och en klartextvy för ett parti i taget (geometri och gruppering i `Relationsvyer.swift`). Valens följder är hemliga tills man valt; då visar en effektruta vad som hände. Menyn har knappen "Visa starthjälpen igen".
+
 Längst ner i menyn ligger **Brytare** från omgång 1 som jämförelse.
 
 Frågan provspelningen ska besvara: **förstår spelaren varför regeringen föll, och är det kul att förlora?** Den nya frågan är också vilket perspektiv som fungerar bäst.

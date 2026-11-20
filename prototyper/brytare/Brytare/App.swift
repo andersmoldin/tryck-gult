@@ -14,6 +14,7 @@ struct ProvbankApp: App {
 }
 
 struct MenuView: View {
+    @State private var helpReset = false
     var body: some View {
         NavigationStack {
             List {
@@ -26,6 +27,16 @@ struct MenuView: View {
                     Text("Välj perspektiv")
                 } footer: {
                     Text("Samma höst, samma rubriker – fyra sätt att spela den.\n\nAlla rubriker i spelet är verkliga. Vi hittade inte på dem. Vi hade inte behövt.")
+                }
+                Section {
+                    Button("Visa starthjälpen igen") {
+                        for title in [CandidateGame.title, SpeakerGame.title, KingmakerGame.title, CommentatorGame.title] {
+                            UserDefaults.standard.removeObject(forKey: "tipsSeen.\(title)")
+                        }
+                        helpReset = true
+                    }
+                } footer: {
+                    if helpReset { Text("Klart – hjälpen visas nästa gång du öppnar ett spel.") }
                 }
                 Section("Från omgång 1") {
                     NavigationLink {

@@ -17,16 +17,22 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
         ScrollView {
             VStack(spacing: 10) {
                 meters
-                Button { showGraph = true } label: {
-                    VStack(spacing: 4) {
-                        GraphView(headlineIndex: game.headlineIndex)
-                            .frame(height: 200)
-                        GraphLegend()
+                if G.self == SpeakerGame.self {
+                    // Omgång 4: talmannen visar situationen först och relationerna under, i tre vyer.
+                    card
+                    RelationsPanel(headlineIndex: game.headlineIndex)
+                } else {
+                    Button { showGraph = true } label: {
+                        VStack(spacing: 4) {
+                            GraphView(headlineIndex: game.headlineIndex)
+                                .frame(height: 200)
+                            GraphLegend()
+                        }
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Partiernas relationer. Tryck för att förstora.")
+                    card
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Partiernas relationer. Tryck för att förstora.")
-                card
             }
             .padding(.horizontal, 14)
             .padding(.bottom, 12)
@@ -65,7 +71,11 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
     @ViewBuilder private var card: some View {
         if let outcome = game.outcome {
             VStack(alignment: .leading, spacing: 12) {
-                Text("VAD HÄNDE").font(.caption.weight(.heavy)).foregroundStyle(.orange)
+                if let effect = game.effect {
+                    EffectBox(effect: effect)
+                } else {
+                    Text("VAD HÄNDE").font(.caption.weight(.heavy)).foregroundStyle(.orange)
+                }
                 Text(outcome).font(.body)
                 Button {
                     withAnimation(.easeInOut(duration: 0.3)) { game.proceed() }
@@ -93,7 +103,9 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
                             if let quip = c.quip {
                                 Text(quip).font(.caption).italic().foregroundStyle(.white.opacity(0.8))
                             }
-                            Text(c.cost).font(.caption).foregroundStyle(.yellow)
+                            if !G.hidesCosts {
+                                Text(c.cost).font(.caption).foregroundStyle(.yellow)
+                            }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(10)
@@ -136,7 +148,9 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
                     Text(tip)
                 }
             }
-            Text("Grafen: vita linjer drar ihop partier, gula förhandlar, röda är konflikter. Tjock linje = ändrades av senaste rubriken. Tryck på grafen för att se den stor, med förklaringar.")
+            Text(G.self == SpeakerGame.self
+                 ? "Relationerna: välj Halvcirkel, Tabell eller Ett parti och tryck för att läsa vad som drar åt och vad som krockar. Vad dina val kostar ser du först efteråt."
+                 : "Grafen: vita linjer drar ihop partier, gula förhandlar, röda är konflikter. Tjock linje = ändrades av senaste rubriken. Tryck på grafen för att se den stor, med förklaringar.")
                 .font(.footnote).foregroundStyle(.secondary)
             Button {
                 showTips = false
@@ -178,6 +192,65 @@ struct PerspectiveScreen<G: PerspectiveGame>: View {
             }
             .foregroundStyle(.white)
             .padding(30)
+        }
+    }
+}
+
+/// Rutan som visar vad ett val ledde till: stor rubrik och ändringarna en i taget.
+struct EffectBox: View {
+    let effect: Effect
+    @State private var shown = 0
+
+    private var color: Color {
+        switch effect.tone {
+        case .bad: return .red
+        case .neutral: return .yellow
+        case .good: return .green
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(effect.title)
+                .font(.system(size: 30, weight: .black))
+                .foregroundStyle(color)
+                .scaleEffect(shown > 0 ? 1 : 0.4, anchor: .leading)
+                .opacity(shown > 0 ? 1 : 0)
+            FlowChips(chips: Array(effect.chips.prefix(max(0, shown - 1))), color: color)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 10).fill(color.opacity(0.15)))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(color, lineWidth: 2))
+        .task(id: effect) {
+            shown = 0
+            for step in 1...(effect.chips.count + 1) {
+                try? await Task.sleep(for: .milliseconds(step == 1 ? 50 : 280))
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { shown = step }
+            }
+        }
+    }
+}
+
+/// Chips som radbryts.
+struct FlowChips: View {
+    let chips: [String]
+    let color: Color
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 6) { items }
+            VStack(alignment: .leading, spacing: 6) { items }
+        }
+    }
+
+    private var items: some View {
+        ForEach(chips, id: \.self) { chip in
+            Text(chip)
+                .font(.subheadline.bold().monospacedDigit())
+                .padding(.horizontal, 8).padding(.vertical, 4)
+                .background(Capsule().fill(color.opacity(0.3)))
+                .transition(.scale.combined(with: .opacity))
         }
     }
 }

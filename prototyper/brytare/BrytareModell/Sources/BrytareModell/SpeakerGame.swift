@@ -105,6 +105,7 @@ public let speakerScript: [SpeakerStep] = [
 
 public struct SpeakerGame: PerspectiveGame {
     public static let title = "Talmannen"
+    public static let hidesCosts = true
     public static let role = "Du är talmannen. Välj vem som får försöka – och när. Undvik extraval."
     public static let tips = [
         "Du föreslår statsminister och riksdagen röstar. Det brukar gå bra. I år gick det inte.",
@@ -133,6 +134,7 @@ public struct SpeakerGame: PerspectiveGame {
     /// Spelarens egen deadline har gått ut: nästa val måste vara en omröstning.
     private var mustVote = false
     private var known: [Candidate: Knowledge] = [:]
+    public private(set) var effect: Effect?
     /// Det försök som kom närmast 175, för slutskärmen.
     private var closest: (candidate: Candidate, support: Int)?
 
@@ -146,9 +148,14 @@ public struct SpeakerGame: PerspectiveGame {
     private var forced: Bool { patience == 0 || mustVote || turns.isLastHeadline }
 
     public var question: String {
-        if mustVote { return "Din deadline har gått ut. Nu måste riksdagen rösta. " + step.situation }
-        if patience == 0 { return "Tålamodet är slut. Riksdagen kräver omröstning – nu. " + step.situation }
-        return step.situation
+        var text = step.situation
+        if mustVote { text = "Din deadline har gått ut. Nu måste riksdagen rösta. " + text }
+        else if patience == 0 { text = "Tålamodet är slut. Riksdagen kräver omröstning – nu. " + text }
+        let facts = Candidate.allCases.compactMap { c in
+            known[c].map { "\(c.name) \($0.support) (\($0.source), \(BrytareModell.headline(after: $0.at).date))." }
+        }
+        if !facts.isEmpty { text += "\n\nDet du vet: " + facts.joined(separator: " ") }
+        return text
     }
 
     public var meters: [Meter] {
@@ -175,17 +182,23 @@ public struct SpeakerGame: PerspectiveGame {
         case .probe:
             stall()
             learn(Candidate.allCases, from: "sonderingen")
+            effect = Effect(title: "STÖDET AVSLÖJAT", tone: .neutral, chips: stallChips + knownChips(Candidate.allCases))
             turns.resolve("Sonderingen tog en vecka. Under tiden kom en ny rubrik. Sedan visste du: \(knownText(Candidate.allCases)).")
         case .mission(let c):
             stall()
             learn([c], from: "uppdraget")
+            effect = Effect(title: "UPPDRAGET KLART", tone: .neutral, chips: stallChips + knownChips([c]))
             turns.resolve("Förhandlingsuppdraget tog en vecka. Under tiden kom en ny rubrik. Sedan visste du: \(knownText([c])).")
         case .meeting:
             stall()
+            effect = Effect(title: "INGET NYTT", tone: .neutral, chips: stallChips)
             turns.resolve("Mötet tog två timmar och en vecka. Beskedet var detsamma som tidigare.")
         case .deadline:
             talksContinue += 1
+            let gained = patience < Self.maxPatience
             patience = min(Self.maxPatience, patience + 1)
+            effect = Effect(title: "DEADLINE SATT", tone: .neutral,
+                            chips: (gained ? ["Tålamod +1"] : []) + ["Samtalen fortsätter +1", "Nästa vecka: omröstning"])
             mustVote = true
             turns.resolve("Du sätter en deadline till nästa vecka. Riksdagen gillar deadlines. Tålamodet stiger.")
         case .vote(let c):
@@ -193,7 +206,16 @@ public struct SpeakerGame: PerspectiveGame {
         }
     }
 
-    public mutating func proceed() { turns.proceed() }
+    public mutating func proceed() {
+        effect = nil
+        turns.proceed()
+    }
+
+    private let stallChips = ["Tålamod −1", "Samtalen fortsätter +1"]
+
+    private func knownChips(_ candidates: [Candidate]) -> [String] {
+        candidates.compactMap { c in known[c].map { "\(c.surname) \($0.support)" } }
+    }
 
     private mutating func stall() {
         talksContinue += 1
@@ -215,11 +237,14 @@ public struct SpeakerGame: PerspectiveGame {
         let r = tally(historicVotes(for: c, after: headlineIndex))
         known[c] = Knowledge(at: headlineIndex, support: r.supportSeats, source: "omröstningen")
         if r.supportSeats > (closest?.support ?? -1) { closest = (c, r.supportSeats) }
+        let numbers = ["\(r.supportSeats) stöd", "\(r.nej) nej"]
         if r.passed {
+            effect = Effect(title: "GÅR IGENOM", tone: .good, chips: numbers)
             turns.resolve(voteText(r), ending: Ending(title: "REGERING", text: "\(c.name) blev statsminister.", isExtraval: false))
             return
         }
         attemptsLeft -= 1
+        effect = Effect(title: "FALLER", tone: .bad, chips: ["Försök −1"] + numbers)
         turns.resolve(voteText(r) + " \(c.name) saknade \(majority - r.supportSeats) mandat. " + why(c),
                       ending: attemptsLeft == 0 ? extraval() : nil)
     }

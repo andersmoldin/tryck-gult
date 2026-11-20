@@ -109,6 +109,41 @@ struct SpeakerGameTests {
         }
     }
 
+    @Test("Följderna är hemliga tills man valt")
+    func hemliga() {
+        #expect(SpeakerGame.hidesCosts)
+        #expect(!CandidateGame.hidesCosts)
+        #expect(SpeakerGame().effect == nil)
+    }
+
+    @Test("Efter en sondering visar effektrutan vad som ändrades")
+    func effektSondering() {
+        var g = SpeakerGame()
+        g.choose("probe")
+        #expect(g.effect == Effect(title: "STÖDET AVSLÖJAT", tone: .neutral,
+                                   chips: ["Tålamod −1", "Samtalen fortsätter +1", "Andersson 151", "Kristersson 173"]))
+        g.proceed()
+        #expect(g.effect == nil)
+        #expect(g.question.hasSuffix("Det du vet: Andersson (S) 151 (sonderingen, 6 nov). Kristersson (M) 173 (sonderingen, 6 nov)."))
+    }
+
+    @Test("En fallen omröstning ger en tydlig dålig effekt")
+    func effektFaller() {
+        var g = SpeakerGame()
+        g.choose("vote.andersson")
+        #expect(g.effect == Effect(title: "FALLER", tone: .bad, chips: ["Försök −1", "151 stöd", "198 nej"]))
+    }
+
+    @Test("Deadline med fullt tålamod ger inget tålamod i effekten")
+    func effektDeadline() {
+        var g = SpeakerGame()
+        g.choose("vote.andersson"); g.proceed()
+        g.choose("vote.kristersson"); g.proceed()
+        g.choose("deadline")
+        #expect(g.effect == Effect(title: "DEADLINE SATT", tone: .neutral,
+                                   chips: ["Samtalen fortsätter +1", "Nästa vecka: omröstning"]))
+    }
+
     @Test("Reta alla lika mycket: varje parti får en kvickhet")
     func retaAlla() {
         let quips = speakerScript.flatMap { $0.cards.map(\.quip) }.joined(separator: " ")

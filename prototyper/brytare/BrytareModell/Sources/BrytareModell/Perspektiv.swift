@@ -28,7 +28,20 @@ public struct Ending: Equatable, Sendable {
     public var footnote: String? = nil
 }
 
+/// Vad ett val ledde till, för effektrutan som visas direkt efter valet.
+public struct Effect: Equatable, Sendable {
+    public enum Tone: Sendable { case bad, neutral, good }
+    public let title: String
+    public let tone: Tone
+    /// Korta rader om vad som ändrades, t.ex. "Tålamod −1".
+    public let chips: [String]
+}
+
 public protocol PerspectiveGame: Sendable {
+    /// Visa inte valens följder i förväg (de syns i effektrutan efteråt).
+    static var hidesCosts: Bool { get }
+    /// Effekten av senaste valet. Visas tills `proceed()`.
+    var effect: Effect? { get }
     init()
     static var title: String { get }
     /// En rad i startmenyn: vem du är och vad du vill.
@@ -51,6 +64,8 @@ public protocol PerspectiveGame: Sendable {
 
 extension PerspectiveGame {
     public var headline: Headline { BrytareModell.headline(after: headlineIndex) }
+    public static var hidesCosts: Bool { false }
+    public var effect: Effect? { nil }
 }
 
 /// Turordningen alla spelen delar: välj, läs utfallet, gå vidare.
