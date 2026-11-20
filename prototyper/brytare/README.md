@@ -1,13 +1,22 @@
-# Brytare – prototyp för ärende #4
+# Provbänk – prototyper för ärende #4
 
-En grov prototyp att provspela på telefonen. Varje parti har en brytare med sitt krav. Slår du på ett parti slås de som krockar med det av. Riktiga rubriker ändrar kraven så fort du närmar dig 175. Efter fyra fallna statsministeromröstningar blir det extraval.
+En grov app att provspela på telefonen. Startmenyn har fyra mycket små spel om samma höst, vart och ett ur ett eget perspektiv. Alla följer de sex verkliga rubrikerna från valnatten till 18 nov:
 
-Frågan provspelningen ska besvara: **förstår spelaren varför regeringen föll, och är det kul att förlora?**
+1. **Statsministerkandidaten** – du leder S och behöver både V och C, men deras krav utesluter varandra.
+2. **Talmannen** – du väljer vem som får försöka och när det blir omröstning. Att vänta kostar tålamod.
+3. **Vågmästarpartiet** – du leder C. Extraval går att undvika, men bara genom att bryta ett löfte.
+4. **Kommentatorn** – du gissar nästa rubrik bland tre. Rätt gissning ger poäng, och tre fel ger sparken.
+
+Alla spelen har samma upplägg. Du gör en sak i taget och väljer mellan 2–3 alternativ, och varje knapp visar vad valet kostar. Ett starttips visas första gången (`?` visar det igen). En kraftriktad graf visar partierna som noder: ljusa linjer drar ihop dem, och röda linjer är konflikter. Grafen ändras när rubrikerna slår ner.
+
+Längst ner i menyn ligger **Brytare** från omgång 1 som jämförelse.
+
+Frågan provspelningen ska besvara: **förstår spelaren varför regeringen föll, och är det kul att förlora?** Den nya frågan är också vilket perspektiv som fungerar bäst.
 
 ## Innehåll
 
-- `BrytareModell/` – spelmodellen som ett rent Swift-paket utan SwiftUI och utan timers. Det innehåller mandat, krav, krockar, rubriker, 175-regeln och extraval. Metoderna returnerar en `FollowUp` när något ska hända senare, och appen väntar ut den.
-- `Brytare/` – SwiftUI-appen. `GameController` animerar modellens ändringar och sköter väntetiderna.
+- `BrytareModell/` – spelmodellen som ett rent Swift-paket utan SwiftUI. Det innehåller mandat, krav, rubriker, 175-regeln och extraval (`Historia.swift`), de fyra spelen (`*Game.swift`, gemensamt protokoll i `Perspektiv.swift`) och grafens linjer och kraftlayout (`Graf.swift`). Brytarvarianten ligger i `Game.swift`.
+- `Brytare/` – SwiftUI-appen. `PerspectiveScreen` visar alla fyra spelen, och `GraphView` ritar grafen.
 - `Brytare.xcodeproj` – Xcode-projektet. Det signeras automatiskt med team `MT5TUADUWK` (Anders Moldin, Personal Team).
 
 ## Testa reglerna (ingen simulator)

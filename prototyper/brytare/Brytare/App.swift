@@ -1,45 +1,56 @@
 import SwiftUI
 import BrytareModell
 
-// PROTOTYP för ärende #4, varianten Brytare. Slängkod – inte produktionskod.
-// Spellogiken ligger i paketet BrytareModell; appen visar den och sköter tiden.
+// PROTOTYP för ärende #4: provbänk med fyra perspektiv. Slängkod – inte produktionskod.
+// Spellogiken ligger i paketet BrytareModell; appen visar den.
 
 @main
-struct BrytareApp: App {
+struct ProvbankApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView().preferredColorScheme(.dark)
+            MenuView().preferredColorScheme(.dark)
         }
     }
 }
 
-struct ContentView: View {
-    @State private var game = GameController()
-
+struct MenuView: View {
     var body: some View {
-        VStack(spacing: 7) {
-            HStack {
-                Text("PROTOTYP · Tryck gult! · Brytare").font(.caption2.bold()).foregroundStyle(.secondary)
-                Spacer()
-                Text("Läge: \(game.headline.date)").font(.caption2.bold())
+        NavigationStack {
+            List {
+                Section {
+                    entry(CandidateGame.self)
+                    entry(SpeakerGame.self)
+                    entry(KingmakerGame.self)
+                    entry(CommentatorGame.self)
+                } header: {
+                    Text("Välj perspektiv")
+                } footer: {
+                    Text("Samma höst, samma rubriker – fyra sätt att spela den.")
+                }
+                Section("Från omgång 1") {
+                    NavigationLink {
+                        BrytareScreen().navigationBarTitleDisplayMode(.inline)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Brytare").font(.headline)
+                            Text("Reglage per parti. Som jämförelse.").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
             }
-            HeadlineBanner(game: game)
-            SeatGauge(game: game)
-            SwitchesView(game: game)
-                .frame(maxHeight: .infinity)
-            BottomBar(game: game)
+            .navigationTitle("Tryck gult!")
         }
-        .padding(.horizontal, 12)
-        .padding(.bottom, 4)
-        .overlay {
-            if let r = game.lastVote {
-                VoteOverlay(result: r, attemptsLeft: game.attemptsLeft).transition(.opacity)
+    }
+
+    private func entry<G: PerspectiveGame>(_ type: G.Type) -> some View {
+        NavigationLink {
+            PerspectiveScreen<G>()
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(G.title).font(.headline)
+                Text(G.role).font(.caption).foregroundStyle(.secondary)
             }
-        }
-        .overlay {
-            if game.isExtraval {
-                ExtravalOverlay(game: game).transition(.opacity)
-            }
+            .padding(.vertical, 2)
         }
     }
 }
