@@ -1,4 +1,4 @@
-// Tidslinjen för perspektivspelen: hur partierna röstade om varje kandidat
+// Tidslinjen för talmannen: hur partierna röstade om varje kandidat
 // efter h verkliga rubriker (h = 0 är valnatten, h = 6 är 18 nov).
 // Rösterna följer historien och går inte att ändra; spelen låter spelaren välja runt dem.
 

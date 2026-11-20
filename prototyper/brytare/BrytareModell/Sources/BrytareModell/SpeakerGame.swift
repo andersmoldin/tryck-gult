@@ -98,7 +98,7 @@ public let speakerScript = SpeakerScript(
                 extras: [card(.mission(.andersson), "Ge Andersson en vecka att förhandla", "S ringer C. C ringer tillbaka. Senare.")],
                 votes: [.andersson, .kristersson],
                 voteQuips: [.andersson: "V väntar på ministerposter. V väntar gärna.",
-                            .kristersson: "SD trycker gult: ”ja, men”."]),
+                            .kristersson: "M räknar med SD. SD räknar med M."]),
             .right: SpeakerStep(
                 situation: "SD vill inte ha ministrar längre, bara inflytande. M tycker att det låter som en majoritet.",
                 extras: [card(.mission(.kristersson), "Ge Kristersson en vecka att förhandla", "M har räknat förut. M räknar igen.")],
@@ -110,7 +110,7 @@ public let speakerScript = SpeakerScript(
                 extras: [card(.meeting(Pair(.C, .L)), "Kalla C och L till möte hos dig", "Två liberala partier, ett rum, ingen agenda.")],
                 votes: [.andersson, .kristersson],
                 voteQuips: [.andersson: "S har en tradition. Det är något.",
-                            .kristersson: "SD trycker gult: ”ja, men”."]),
+                            .kristersson: "KD har bokat lokal. För säkerhets skull."]),
         ],
         [ // 2: C kräver totalpaket
             .left: SpeakerStep(
@@ -178,7 +178,7 @@ public let speakerScript = SpeakerScript(
                 extras: [card(.meeting(Pair(.S, .V)), "Kalla S och V till ett tredje möte", "Tredje gången gillt, sägs det. Av någon.")],
                 votes: [.andersson, .kristersson],
                 voteQuips: [.andersson: "C bestämde sig. Sedan stod allt still.",
-                            .kristersson: "SD trycker gult igen. Det är en vana nu."]),
+                            .kristersson: "L undrar om någon har frågat L."]),
             .right: SpeakerStep(
                 situation: "S och V har mötts i två timmar. Kristersson ser på och väntar.",
                 extras: [deadlineCard],
@@ -190,7 +190,7 @@ public let speakerScript = SpeakerScript(
                 extras: [probeCard],
                 votes: [.andersson, .kristersson],
                 voteQuips: [.andersson: "C bestämde sig. Sedan stod allt still.",
-                            .kristersson: "SD trycker gult igen. Det är en vana nu."]),
+                            .kristersson: "M har skrivit pressmeddelandet. Två versioner."]),
         ],
     ],
     final: SpeakerStep(
@@ -206,21 +206,25 @@ public struct Rumor: Sendable {
     public let week: Int
     public let thread: Thread
     public let text: String
-    /// Linjer som ryktet sätter (nil = tar bort linjen).
-    let changes: [(pair: Pair, kind: RelationKind?, label: String)]
+    /// Linjer som ryktet sätter.
+    public let changes: [(pair: Pair, kind: RelationKind, label: String)]
 }
 
 public let rumorTable: [Rumor] = [
     Rumor(week: 1, thread: .left, text: "C och S har setts äta lunch.", changes: [(Pair(.C, .S), .negotiating, "Lunch på stan")]),
     Rumor(week: 1, thread: .right, text: "M och C pratade länge i korridoren.", changes: [(Pair(.C, .M), .negotiating, "Korridorsamtal")]),
-    Rumor(week: 1, thread: .wide, text: "KD har bokat det största konferensrummet.", changes: [(Pair(.KD, .L), .attraction, "Samma konferensrum")]),
+    Rumor(week: 1, thread: .wide, text: "KD har bokat det största konferensrummet. L har fått en inbjudan.", changes: [(Pair(.KD, .L), .attraction, "Samma konferensrum")]),
     Rumor(week: 2, thread: .left, text: "V och MP har startat en chattgrupp. S är inte med.", changes: [(Pair(.V, .MP), .attraction, "Egen chattgrupp")]),
     Rumor(week: 2, thread: .right, text: "L och SD hälsade på varandra i hissen.", changes: [(Pair(.SD, .L), .negotiating, "Artigt i hissen")]),
-    Rumor(week: 3, thread: .left, text: "V har slutat svara när S ringer.", changes: [(Pair(.S, .V), .conflict, "Svarar inte")]),
-    Rumor(week: 3, thread: .right, text: "C:s gruppledare sågs på M:s fest. Hen gick tidigt.", changes: [(Pair(.C, .M), .negotiating, "Gick tidigt från festen")]),
+    Rumor(week: 2, thread: .wide, text: "S och M åkte i samma hiss. Ingen sa något, men de log.", changes: [(Pair(.S, .M), .negotiating, "Log i hissen")]),
+    Rumor(week: 3, thread: .left, text: "MP och C har setts på samma pendeltåg.", changes: [(Pair(.C, .MP), .negotiating, "Samma pendeltåg")]),
+    Rumor(week: 3, thread: .right, text: "KD och C delade på en pizza efter voteringen.", changes: [(Pair(.C, .KD), .negotiating, "Delad pizza")]),
+    Rumor(week: 3, thread: .wide, text: "C och L har börjat sitta bredvid varandra i plenum.", changes: [(Pair(.C, .L), .attraction, "Sitter bredvid")]),
     Rumor(week: 4, thread: .left, text: "MP och C delade taxi från riksdagen.", changes: [(Pair(.C, .MP), .attraction, "Delad taxi")]),
-    Rumor(week: 4, thread: .right, text: "SD bjöd M på kaffe. M betalade.", changes: [(Pair(.M, .SD), .attraction, "Kaffe, M betalade")]),
-    Rumor(week: 5, thread: .wide, text: "Någon i riksdagen har börjat skriva valaffischer.", changes: []),
+    Rumor(week: 4, thread: .right, text: "SD och L har slutat hälsa i hissen.", changes: [(Pair(.SD, .L), .conflict, "Hälsar inte längre")]),
+    Rumor(week: 4, thread: .wide, text: "V och MP lunchar ihop igen. S fick inte veta var.", changes: [(Pair(.V, .MP), .attraction, "Lunch igen")]),
+    Rumor(week: 5, thread: .left, text: "C och L har bytt telefonnummer. ”För säkerhets skull.”", changes: [(Pair(.C, .L), .negotiating, "Bytt nummer")]),
+    Rumor(week: 5, thread: .wide, text: "L och MP har bokat samma tryckeri för valaffischerna.", changes: [(Pair(.L, .MP), .negotiating, "Samma tryckeri")]),
 ]
 
 public struct SpeakerGame: Sendable {
@@ -244,7 +248,7 @@ public struct SpeakerGame: Sendable {
 
     /// Ett rykte som gäller tills en verklig rubrik ändrar samma par.
     private struct Overlay {
-        let kind: RelationKind?
+        let kind: RelationKind
         let label: String
         let since: Int
     }
@@ -306,11 +310,7 @@ public struct SpeakerGame: Sendable {
         let base = keyRelations(after: headlineIndex)
         var byPair = Dictionary(uniqueKeysWithValues: base.map { ($0.pair, $0) })
         for (pair, o) in overlays where sameBase(pair, o.since, headlineIndex) {
-            if let kind = o.kind {
-                byPair[pair] = KeyRelation(pair: pair, kind: kind, label: o.label, isNew: o.since == headlineIndex)
-            } else {
-                byPair[pair] = nil
-            }
+            byPair[pair] = KeyRelation(pair: pair, kind: o.kind, label: o.label, isNew: o.since == headlineIndex, isRumor: true)
         }
         return byPair.values.sorted { ($0.pair.a.rawValue, $0.pair.b.rawValue) < ($1.pair.a.rawValue, $1.pair.b.rawValue) }
     }
@@ -448,7 +448,8 @@ public struct SpeakerGame: Sendable {
         if let c = closest {
             text += " Närmast kom \(c.candidate.name) med \(c.support) – \(majority - c.support) mandat för lite."
         }
-        let leaning = threadCount.max { $0.value < $1.value }?.key ?? .wide
+        // Vid lika många val vinner den första i ordningen vänster, höger, process (samma svar varje gång).
+        let leaning = [Thread.left, .right, .wide].max { threadCount[$0, default: 0] < threadCount[$1, default: 0] } ?? .wide
         switch leaning {
         case .left: text += " Du lutade dig åt Andersson."
         case .right: text += " Du lutade dig åt Kristersson."

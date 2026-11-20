@@ -125,6 +125,27 @@ struct SpeakerGameTests {
         }
     }
 
+    @Test("Varje rykte ändrar nätverket och märks som rykte")
+    func ryktenAndrar() {
+        for r in rumorTable {
+            #expect(!r.changes.isEmpty, "\(r.text)")
+            let base = keyRelations(after: r.week)
+            for c in r.changes {
+                let before = base.first { $0.pair == c.pair }
+                #expect(before?.kind != c.kind, "\(r.text): \(c.pair) byter inte sort")
+            }
+        }
+        var g = SpeakerGame()
+        g.choose("vote.andersson"); g.proceed()
+        #expect(g.relations.first { $0.pair == Pair(.C, .S) }?.isRumor == true)
+        #expect(g.relations.first { $0.pair == Pair(.S, .V) }?.isRumor == false)
+    }
+
+    @Test("Alla tre trådarna får rykten")
+    func ryktenITradar() {
+        for t in [Thread.left, .right, .wide] { #expect(rumorTable.filter { $0.thread == t }.count >= 3) }
+    }
+
     @Test("Slutet säger vilken väg du tog, och brasklappen gäller ryktena")
     func slut() {
         var g = SpeakerGame()

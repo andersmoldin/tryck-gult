@@ -1,4 +1,4 @@
-// PROTOTYP för ärende #4, varianten Brytare. Slängkod – inte produktionskod.
+// PROTOTYP för ärende #4 (talmannen). Slängkod – inte produktionskod.
 // Mandat och händelser kommer från researchen i ärende #2 (kommentaren "Resolution (research)").
 
 /// Ett riksdagsparti.
@@ -31,7 +31,6 @@ extension P {
     public var seats: Int { info.seats }
 }
 
-public let totalSeats = 349
 /// Så många nej fäller en statsministerkandidat (negativ parlamentarism).
 public let majority = 175
 /// Ordningen från vänster till höger.

@@ -57,8 +57,12 @@ struct GraphView: View {
         for (pair, spot) in emojiPositions(layout, relations) {
             guard let line = relations.first(where: { $0.pair == pair }) else { continue }
             let c = point(spot)
-            ctx.fill(Path(ellipseIn: CGRect(x: c.x - emojiR, y: c.y - emojiR, width: 2 * emojiR, height: 2 * emojiR)),
-                     with: .color(line.isNew ? Color.orange.opacity(0.35) : Color(white: 0.12)))
+            let disc = Path(ellipseIn: CGRect(x: c.x - emojiR, y: c.y - emojiR, width: 2 * emojiR, height: 2 * emojiR))
+            ctx.fill(disc, with: .color(line.isNew ? Color.orange.opacity(0.35) : Color(white: 0.12)))
+            if line.isRumor {
+                // Rykten är spelets påhitt: lila streckad ring skiljer dem från de verkliga rubrikernas linjer.
+                ctx.stroke(disc, with: .color(.purple), style: StrokeStyle(lineWidth: 2.5, dash: [4, 3]))
+            }
             ctx.draw(Text(line.kind.emoji).font(.system(size: emojiR * 1.25)), at: c)
         }
         for p in P.allCases {
@@ -76,6 +80,8 @@ struct GraphView: View {
         var layout = GraphLayout()
         private(set) var blocksChangedAt = Date.distantPast
         private var last: Date?
+        /// Tid som inte räckt till ett helt steg än (så att 60 steg/s gäller även på 120 Hz-skärmar).
+        private var carry: TimeInterval = 0
         private var lastLines: [KeyRelation]?
 
         func advance(to now: Date, lines: [KeyRelation]) {
@@ -85,9 +91,12 @@ struct GraphView: View {
                 if clusters(previous) != clusters(lines) { blocksChangedAt = now }
             }
             lastLines = lines
-            let elapsed = min(now.timeIntervalSince(last ?? now), 0.1)
+            carry += min(now.timeIntervalSince(last ?? now), 0.1)
             last = now
-            for _ in 0..<Int((elapsed * 60).rounded()) { layout.step(lines) }
+            while carry >= 1.0 / 60 {
+                layout.step(lines)
+                carry -= 1.0 / 60
+            }
         }
     }
 }
@@ -111,7 +120,8 @@ struct EmojiLegend: View {
             Text("\(RelationKind.attraction.emoji) samarbete")
             Text("\(RelationKind.negotiating.emoji) förhandlar")
             Text("\(RelationKind.conflict.emoji) röd linje")
-            Text("tjock linje, orange ring = nytt").foregroundStyle(.secondary)
+            Text("tjock linje, orange skiva = nytt").foregroundStyle(.secondary)
+            Text("lila ring = rykte").foregroundStyle(.purple)
         }
         .font(.caption)
     }

@@ -9,8 +9,10 @@ public struct KeyRelation: Equatable, Sendable {
     public let pair: Pair
     public let kind: RelationKind
     public let label: String
-    /// Linjen kom till eller ändrades med den senaste rubriken.
+    /// Linjen kom till eller ändrades med den senaste rubriken (eller det senaste ryktet).
     public let isNew: Bool
+    /// Linjen kommer från ett rykte (spelets påhitt), inte från en verklig rubrik.
+    public var isRumor = false
 }
 
 /// Linjerna efter h rubriker. Bara det som behövs för att förstå läget, med en kort etikett.
@@ -174,8 +176,8 @@ public struct GraphLayout: Sendable {
     public mutating func step(_ relations: [KeyRelation], dt: Double = 1.0 / 60) {
         let f = forces
         let kinds = Dictionary(uniqueKeysWithValues: relations.map { ($0.pair, $0.kind) })
-        let blocks = clusters(relations)
-        let blockOf = Dictionary(uniqueKeysWithValues: blocks.enumerated().flatMap { i, b in b.map { ($0, i) } })
+        let groups = clusters(relations).map(Set.init)
+        let grouped = groups.reduce(into: Set<P>()) { $0.formUnion($1) }
         var force = positions.mapValues { _ in Point(x: 0, y: 0) }
         let parties = P.allCases
         func push(_ p: P, _ fx: Double, _ fy: Double) { force[p]!.x += fx; force[p]!.y += fy }
@@ -192,9 +194,10 @@ public struct GraphLayout: Sendable {
                 case .negotiating?: pull += f.negotiatingStrength * (d - f.negotiatingLength)
                 case .conflict?: pull += f.conflictStrength * min(0, d - f.conflictLength)
                 case nil:
-                    if let ba = blockOf[a], let bb = blockOf[b] {
-                        pull += ba == bb ? f.blockStrength * (d - f.blockLength)
-                                         : f.acrossBlockStrength * min(0, d - f.acrossBlockLength)
+                    if groups.contains(where: { $0.contains(a) && $0.contains(b) }) {
+                        pull += f.blockStrength * (d - f.blockLength)
+                    } else if grouped.contains(a) && grouped.contains(b) {
+                        pull += f.acrossBlockStrength * min(0, d - f.acrossBlockLength)
                     }
                 }
                 push(a, pull * dx / d, pull * dy / d)
@@ -237,11 +240,33 @@ public struct GraphLayout: Sendable {
     }
 }
 
-/// Block: partier som hänger ihop via dragning (minst två partier per block), från vänster till höger.
+/// Moln: grupper av partier som gärna samarbetar. Varje dragning hör till minst ett moln, och inget moln
+/// innehåller två partier med röd linje mellan sig. Ett parti kan sitta i två moln (t.ex. M mellan L och SD).
 public func clusters(_ relations: [KeyRelation]) -> [[P]] {
-    var parent = Dictionary(uniqueKeysWithValues: P.allCases.map { ($0, $0) })
-    func root(_ p: P) -> P { var r = p; while parent[r]! != r { r = parent[r]! }; return r }
-    for r in relations where r.kind == .attraction { parent[root(r.pair.a)] = root(r.pair.b) }
-    let groups = Dictionary(grouping: leftToRight, by: root).values.filter { $0.count >= 2 }
-    return groups.sorted { leftToRight.firstIndex(of: $0[0])! < leftToRight.firstIndex(of: $1[0])! }
+    let order = { (p: P) in leftToRight.firstIndex(of: p)! }
+    let conflicts = Set(relations.filter { $0.kind == .conflict }.map(\.pair))
+    func peaceful(_ g: Set<P>) -> Bool {
+        let list = Array(g)
+        for (i, a) in list.enumerated() { for b in list.dropFirst(i + 1) where conflicts.contains(Pair(a, b)) { return false } }
+        return true
+    }
+    var groups: [Set<P>] = relations.filter { $0.kind == .attraction }
+        .sorted { (order($0.pair.a), order($0.pair.b)) < (order($1.pair.a), order($1.pair.b)) }
+        .map { [$0.pair.a, $0.pair.b] }
+    var merged = true
+    while merged {
+        merged = false
+        search: for i in groups.indices {
+            for j in groups.indices where j > i && !groups[i].isDisjoint(with: groups[j]) {
+                let union = groups[i].union(groups[j])
+                if peaceful(union) {
+                    groups[i] = union
+                    groups.remove(at: j)
+                    merged = true
+                    break search
+                }
+            }
+        }
+    }
+    return groups.map { $0.sorted { order($0) < order($1) } }.sorted { order($0[0]) < order($1[0]) }
 }

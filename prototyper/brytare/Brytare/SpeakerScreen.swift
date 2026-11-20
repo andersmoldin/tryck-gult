@@ -73,7 +73,9 @@ struct SpeakerScreen: View {
                     Text("spelets påhitt").font(.caption2).foregroundStyle(.secondary)
                 }
                 Text(game.rumor?.text ?? "").font(.title3.bold())
-                Text("Titta på nätverket – något har flyttat sig.").font(.caption).foregroundStyle(.secondary)
+                if let r = game.rumor, !r.changes.isEmpty {
+                    Text("Titta på nätverket – linjen med lila ring är ryktet.").font(.caption).foregroundStyle(.secondary)
+                }
                 proceedButton
             }
             .transition(.scale.combined(with: .opacity))
@@ -147,7 +149,7 @@ struct SpeakerScreen: View {
                     Text(tip)
                 }
             }
-            Text("Nätverket: partier som samarbetar samlas i ett moln. \(RelationKind.attraction.emoji) samarbete, \(RelationKind.negotiating.emoji) förhandlar, \(RelationKind.conflict.emoji) röd linje. Tjock linje = nytt.")
+            Text("Nätverket: partier som samarbetar samlas i ett moln. \(RelationKind.attraction.emoji) samarbete, \(RelationKind.negotiating.emoji) förhandlar, \(RelationKind.conflict.emoji) röd linje. Tjock linje = nytt. Lila ring = rykte.")
                 .font(.footnote).foregroundStyle(.secondary)
             Button { showTips = false } label: {
                 Text("Uppfattat").font(.headline).frame(maxWidth: .infinity)

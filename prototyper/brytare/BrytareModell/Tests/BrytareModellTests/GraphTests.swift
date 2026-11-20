@@ -39,12 +39,21 @@ struct GraphTests {
         #expect(rel(6, .V, .C)?.isNew == true)
     }
 
-    @Test("Kluster: partier som drar åt samma håll bildar block")
-    func kluster() {
-        let c = clusters(keyRelations(after: 0))
-        #expect(c.contains([.S, .V, .MP]) || c.contains { Set($0) == [.S, .V, .MP] })
-        #expect(c.contains { Set($0) == [.M, .KD, .L, .SD] })
-        #expect(!c.contains { $0.contains(.C) })
+    @Test("Moln: samarbetsgrupper utan röd linje inuti, och varje samarbete ligger i ett moln")
+    func moln() {
+        for h in 0...timelineEnd {
+            let lines = keyRelations(after: h)
+            let groups = clusters(lines)
+            let conflicts = Set(lines.filter { $0.kind == .conflict }.map(\.pair))
+            for g in groups {
+                for (i, a) in g.enumerated() { for b in g.dropFirst(i + 1) { #expect(!conflicts.contains(Pair(a, b)), "rubrik \(h)") } }
+            }
+            for l in lines where l.kind == .attraction {
+                #expect(groups.contains { $0.contains(l.pair.a) && $0.contains(l.pair.b) }, "rubrik \(h): \(l.pair)")
+            }
+        }
+        let h0 = clusters(keyRelations(after: 0)).map(Set.init)
+        #expect(h0.contains([.M, .KD, .L]) && h0.contains([.M, .SD]) && h0.contains([.V, .S, .MP]))
     }
 
     @Test("Grupperingarna syns: varje parti står närmare sitt eget blocks mitt än något annat blocks")
@@ -60,7 +69,8 @@ struct GraphTests {
                       y: b.map { l.positions[$0]!.y }.reduce(0, +) / Double(b.count))
             }
             for (i, b) in blocks.enumerated() {
-                for p in b {
+                // Partier som sitter i två moln (t.ex. M mellan L och SD) står med flit mittemellan.
+                for p in b where blocks.filter({ $0.contains(p) }).count == 1 {
                     let own = l.positions[p]!.distance(to: centers[i])
                     for (j, c) in centers.enumerated() where j != i {
                         #expect(own < l.positions[p]!.distance(to: c), "rubrik \(h): \(p.rawValue)")
