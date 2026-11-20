@@ -34,11 +34,16 @@ extension P {
 public let totalSeats = 349
 /// Så många nej fäller en statsministerkandidat (negativ parlamentarism).
 public let majority = 175
-/// "Nära": då dyker nästa rubrik upp.
-public let nearLimit = 150
-/// Ordningen i brytarlistan.
-public let bySeats: [P] = [.S, .M, .SD, .V, .C, .KD, .MP, .L]
-/// Ordningen i 175-mätaren.
+/// Ordningen från vänster till höger.
 public let leftToRight: [P] = [.V, .S, .MP, .C, .L, .KD, .M, .SD]
-let anderssonSide: [P] = [.S, .V, .MP]
-let kristerssonSide: [P] = [.M, .KD, .L, .SD]
+
+/// Två partier. Ordningen spelar ingen roll.
+public struct Pair: Hashable, Sendable {
+    public let a: P
+    public let b: P
+    public init(_ x: P, _ y: P) {
+        if x.rawValue < y.rawValue { a = x; b = y } else { a = y; b = x }
+    }
+}
+
+public enum Vote: Sendable { case ja, gult, nej }

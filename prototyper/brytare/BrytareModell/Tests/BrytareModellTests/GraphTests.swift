@@ -39,46 +39,34 @@ struct GraphTests {
         #expect(rel(6, .V, .C)?.isNew == true)
     }
 
-    @Test("Linjer som en rubrik tar bort går att visa")
-    func borttagna() {
-        #expect(removedRelations(after: 0).isEmpty)
-        #expect(removedRelations(after: 1).map(\.pair) == [Pair(.SD, .L)])
-        #expect(removedRelations(after: 2).isEmpty)
+    @Test("Kluster: partier som drar åt samma håll bildar block")
+    func kluster() {
+        let c = clusters(keyRelations(after: 0))
+        #expect(c.contains([.S, .V, .MP]) || c.contains { Set($0) == [.S, .V, .MP] })
+        #expect(c.contains { Set($0) == [.M, .KD, .L, .SD] })
+        #expect(!c.contains { $0.contains(.C) })
     }
 
-    func settled(after h: Int, steps: Int = 900) -> GraphLayout {
-        var layout = GraphLayout()
-        let r = keyRelations(after: h)
-        for _ in 0..<steps { layout.step(r) }
-        return layout
-    }
-
-    @Test("När grafen har lagt sig står allierade närmare varandra än partier i konflikt")
-    func avstand() {
-        let layout = settled(after: 0)
-        let r = keyRelations(after: 0)
-        func mean(_ kind: RelationKind) -> Double {
-            let d = r.filter { $0.kind == kind }.map { layout.distance($0.pair.a, $0.pair.b) }
-            return d.reduce(0, +) / Double(d.count)
-        }
-        #expect(mean(.attraction) < mean(.conflict) * 0.6)
-    }
-
-    @Test("Efter rubrik 4 står C närmare S än M")
-    func cFlyttar() {
-        let layout = settled(after: 4)
-        #expect(layout.distance(.C, .S) < layout.distance(.C, .M))
-    }
-
-    @Test("Grafen stannar inom ramen och står still när den lagt sig")
-    func stabil() {
-        var layout = settled(after: 6)
-        let before = layout.positions
-        layout.step(keyRelations(after: 6))
-        for p in P.allCases {
-            let pos = layout.positions[p]!
-            #expect(abs(pos.x) <= 1 && abs(pos.y) <= 1)
-            #expect(abs(pos.x - before[p]!.x) < 0.001 && abs(pos.y - before[p]!.y) < 0.001)
+    @Test("Grupperingarna syns: varje parti står närmare sitt eget blocks mitt än något annat blocks")
+    func blockSyns() {
+        var l = GraphLayout()
+        for h in 0...timelineEnd {
+            if h > 0 { l.nudge() }
+            let lines = keyRelations(after: h)
+            for _ in 0..<900 { l.step(lines) }
+            let blocks = clusters(lines)
+            let centers = blocks.map { b -> Point in
+                Point(x: b.map { l.positions[$0]!.x }.reduce(0, +) / Double(b.count),
+                      y: b.map { l.positions[$0]!.y }.reduce(0, +) / Double(b.count))
+            }
+            for (i, b) in blocks.enumerated() {
+                for p in b {
+                    let own = l.positions[p]!.distance(to: centers[i])
+                    for (j, c) in centers.enumerated() where j != i {
+                        #expect(own < l.positions[p]!.distance(to: c), "rubrik \(h): \(p.rawValue)")
+                    }
+                }
+            }
         }
     }
 }
@@ -89,7 +77,7 @@ struct WideGraphTests {
 
     /// Grafen så som appen kör den: samma layout byggs vidare rubrik för rubrik, med en knuff vid varje ny rubrik.
     func replay(_ check: (Int, GraphLayout) -> Void) {
-        var layout = GraphLayout(style: .wide)
+        var layout = GraphLayout()
         for h in 0...timelineEnd {
             if h > 0 { layout.nudge() }
             let lines = keyRelations(after: h)
@@ -145,21 +133,23 @@ struct WideGraphTests {
         }
     }
 
-    @Test("Emojin ligger på sin linje")
+    @Test("Emojin sitter vid sin linje")
     func paLinjen() {
         replay { h, l in
             for line in keyRelations(after: h) {
                 let a = l.positions[line.pair.a]!, b = l.positions[line.pair.b]!
                 let e = emojiPositions(l, keyRelations(after: h))[line.pair]!
-                let off = a.distance(to: e) + e.distance(to: b) - a.distance(to: b)
-                #expect(off < 0.001, "rubrik \(h): \(line.pair)")
+                // Avstånd från emojin till linjen (vinkelrätt), högst 0,18 enligt placeringsregeln.
+                let len = a.distance(to: b)
+                let cross = abs((b.x - a.x) * (a.y - e.y) - (a.x - e.x) * (b.y - a.y)) / len
+                #expect(cross <= 0.18 + 1e-9, "rubrik \(h): \(line.pair)")
             }
         }
     }
 
     @Test("En knuff flyttar noderna mer än ett vanligt steg, och de lägger sig igen")
     func knuff() {
-        var still = GraphLayout(style: .wide)
+        var still = GraphLayout()
         let lines = keyRelations(after: 3)
         for _ in 0..<900 { still.step(lines) }
         var nudged = still
@@ -173,4 +163,42 @@ struct WideGraphTests {
         nudged.step(lines)
         for p in P.allCases { #expect(nudged.positions[p]!.distance(to: rested[p]!) < 0.001) }
     }
+}
+
+@Suite("Nätverket med rykten")
+struct RumorGraphTests {
+    typealias M = WideGraphMetrics
+
+    /// Spela talmannen längs en tråd och kontrollera nätverket efter varje rykte och varje vecka.
+    func play(preferring prefix: String) {
+        var g = SpeakerGame()
+        var layout = GraphLayout()
+        var last = g.relations
+        for _ in 0..<40 where g.ending == nil {
+            if g.phase == .choosing {
+                let c = g.choices
+                g.choose((c.first { $0.id.hasSuffix(prefix) } ?? c[0]).id)
+            }
+            g.proceed()
+            if g.relations != last { layout.nudge(); last = g.relations }
+            for _ in 0..<900 { layout.step(g.relations) }
+            let spots = emojiPositions(layout, g.relations)
+            for (pair, e) in spots {
+                for p in P.allCases {
+                    #expect(e.distance(to: layout.positions[p]!) >= M.nodeRadius(p) + M.emojiRadius + M.margin,
+                            "\(prefix) vecka \(g.headlineIndex): \(pair) mot \(p.rawValue)")
+                }
+            }
+            let all = Array(spots.values)
+            for i in all.indices {
+                for j in all.indices where j > i {
+                    #expect(all[i].distance(to: all[j]) >= 2 * M.emojiRadius + M.margin, "\(prefix) vecka \(g.headlineIndex)")
+                }
+            }
+        }
+    }
+
+    @Test("Vänstertråden") func vanster() { play(preferring: "andersson") }
+    @Test("Högertråden") func hoger() { play(preferring: "kristersson") }
+    @Test("Processtråden") func process() { play(preferring: "probe") }
 }

@@ -61,6 +61,18 @@ public func tally(_ votes: [P: Vote]) -> VoteResult {
     return VoteResult(ja: ja, gult: gult, nej: nej)
 }
 
+/// Resultatet av en statsministeromröstning.
+public struct VoteResult: Equatable, Sendable {
+    public let ja: Int
+    public let gult: Int
+    public let nej: Int
+    public init(ja: Int, gult: Int, nej: Int) {
+        self.ja = ja; self.gult = gult; self.nej = nej
+    }
+    /// Negativ parlamentarism: kandidaten går igenom om färre än 175 röstar nej.
+    public var passed: Bool { nej < majority }
+}
+
 extension VoteResult {
     /// Stöd = ja + gult.
     public var supportSeats: Int { ja + gult }

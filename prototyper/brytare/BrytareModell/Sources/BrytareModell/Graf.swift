@@ -24,16 +24,6 @@ public func keyRelations(after h: Int) -> [KeyRelation] {
     .sorted { ($0.pair.a.rawValue, $0.pair.b.rawValue) < ($1.pair.a.rawValue, $1.pair.b.rawValue) }
 }
 
-/// Linjer som fanns före rubrik h men som rubriken tog bort.
-public func removedRelations(after h: Int) -> [KeyRelation] {
-    guard h > 0 else { return [] }
-    let now = relationState(after: h)
-    return relationState(after: h - 1)
-        .filter { now[$0.key] == nil }
-        .map { KeyRelation(pair: $0.key, kind: $0.value.kind, label: $0.value.label, isNew: true) }
-        .sorted { ($0.pair.a.rawValue, $0.pair.b.rawValue) < ($1.pair.a.rawValue, $1.pair.b.rawValue) }
-}
-
 private struct RelationValue: Equatable {
     let kind: RelationKind
     let label: String
@@ -95,12 +85,12 @@ public enum WideGraphMetrics {
     public static let margin = 0.02
 }
 
-/// Var emojin på varje linje ska sitta: så nära mitten som möjligt, men flyttad längs linjen
-/// om den annars skulle krocka med ett parti eller en annan emoji.
+/// Var emojin på varje linje ska sitta: så nära mitten som möjligt, men flyttad längs linjen –
+/// och vid behov en bit åt sidan (högst 0,18) – om den annars skulle krocka med ett parti eller en annan emoji.
 public func emojiPositions(_ layout: GraphLayout, _ lines: [KeyRelation]) -> [Pair: Point] {
     typealias M = WideGraphMetrics
     // Mitten först, sedan växelvis utåt mot ändarna.
-    let candidates = [0.5] + stride(from: 0.04, through: 0.3, by: 0.04).flatMap { [0.5 - $0, 0.5 + $0] }
+    let candidates = [0.5] + stride(from: 0.03, through: 0.36, by: 0.03).flatMap { [0.5 - $0, 0.5 + $0] }
     var placed: [Pair: Point] = [:]
     func clearance(_ e: Point) -> Double {
         let nodes = P.allCases.map { e.distance(to: layout.positions[$0]!) - M.nodeRadius($0) - M.emojiRadius }
@@ -110,16 +100,21 @@ public func emojiPositions(_ layout: GraphLayout, _ lines: [KeyRelation]) -> [Pa
     // Korta linjer har minst utrymme att flytta emojin på, så de får välja först.
     for line in lines.sorted(by: { layout.distance($0.pair.a, $0.pair.b) < layout.distance($1.pair.a, $1.pair.b) }) {
         let a = layout.positions[line.pair.a]!, b = layout.positions[line.pair.b]!
-        let spots = candidates.map { a.toward(b, $0) }
+        // Först på linjen; går inget läge där får emojin sitta en bit vid sidan om den.
+        let len = max(a.distance(to: b), 1e-6)
+        let normal = Point(x: -(b.y - a.y) / len, y: (b.x - a.x) / len)
+        let spots = [0.0, 0.09, -0.09, 0.18, -0.18].flatMap { off in
+            candidates.map { t -> Point in
+                let q = a.toward(b, t)
+                return Point(x: q.x + normal.x * off, y: q.y + normal.y * off)
+            }
+        }
         placed[line.pair] = spots.first { clearance($0) >= M.margin } ?? spots.max { clearance($0) < clearance($1) }!
     }
     return placed
 }
 
 public struct GraphLayout: Sendable {
-    /// `.standard` för de små graferna, `.wide` för talmannens stora nätverk där partierna ska stå långt isär.
-    public enum Style: Sendable { case standard, wide }
-
     /// Krafterna. Enheterna är rutan [-1, 1] × [-1, 1].
     private struct Forces {
         var repulsion: Double
@@ -132,8 +127,12 @@ public struct GraphLayout: Sendable {
         var gravity: Double
         /// Knuffar partier bort från linjer de inte hör till (där emojin sitter), så att ingen nod ligger på en linje.
         var lineRepulsion: Double
-        /// Håll hela noden (med radie) inom ramen, inte bara mittpunkten.
-        var keepDiscInside = false
+        /// Partier i samma block som inte har en egen linje dras ändå mot varandra (blocket håller ihop).
+        var blockLength = 0.95
+        var blockStrength = 2.0
+        /// Partier i olika block knuffas isär om de kommer närmare än så här.
+        var acrossBlockLength = 1.4
+        var acrossBlockStrength = 2.0
         var damping = 0.85
     }
 
@@ -142,17 +141,11 @@ public struct GraphLayout: Sendable {
     private let forces: Forces
 
     /// Partierna börjar i en båge från vänster till höger.
-    public init(style: Style = .standard) {
-        switch style {
-        case .standard:
-            forces = Forces(repulsion: 0.03, allyLength: 0.4, allyStrength: 4, negotiatingLength: 0.7,
-                            negotiatingStrength: 1.5, conflictLength: 1.3, conflictStrength: 2, gravity: 0.6,
-                            lineRepulsion: 0)
-        case .wide:
-            forces = Forces(repulsion: 0.09, allyLength: 0.6, allyStrength: 3, negotiatingLength: 0.85,
-                            negotiatingStrength: 1.5, conflictLength: 1.5, conflictStrength: 2, gravity: 0.35,
-                            lineRepulsion: 0.02, keepDiscInside: true)
-        }
+    /// Dragning är en kort, stark fjäder så att block klumpar ihop sig; röd linje knuffar isär.
+    public init() {
+        forces = Forces(repulsion: 0.09, allyLength: 0.65, allyStrength: 5, negotiatingLength: 0.85,
+                        negotiatingStrength: 1.5, conflictLength: 1.2, conflictStrength: 2.5, gravity: 0.35,
+                        lineRepulsion: 0.05)
         var pos: [P: Point] = [:]
         for (i, p) in leftToRight.enumerated() {
             let angle = Double.pi - Double(i) * Double.pi / Double(leftToRight.count - 1)
@@ -181,6 +174,8 @@ public struct GraphLayout: Sendable {
     public mutating func step(_ relations: [KeyRelation], dt: Double = 1.0 / 60) {
         let f = forces
         let kinds = Dictionary(uniqueKeysWithValues: relations.map { ($0.pair, $0.kind) })
+        let blocks = clusters(relations)
+        let blockOf = Dictionary(uniqueKeysWithValues: blocks.enumerated().flatMap { i, b in b.map { ($0, i) } })
         var force = positions.mapValues { _ in Point(x: 0, y: 0) }
         let parties = P.allCases
         func push(_ p: P, _ fx: Double, _ fy: Double) { force[p]!.x += fx; force[p]!.y += fy }
@@ -196,7 +191,11 @@ public struct GraphLayout: Sendable {
                 case .attraction?: pull += f.allyStrength * (d - f.allyLength)
                 case .negotiating?: pull += f.negotiatingStrength * (d - f.negotiatingLength)
                 case .conflict?: pull += f.conflictStrength * min(0, d - f.conflictLength)
-                case nil: break
+                case nil:
+                    if let ba = blockOf[a], let bb = blockOf[b] {
+                        pull += ba == bb ? f.blockStrength * (d - f.blockLength)
+                                         : f.acrossBlockStrength * min(0, d - f.acrossBlockLength)
+                    }
                 }
                 push(a, pull * dx / d, pull * dy / d)
                 push(b, -pull * dx / d, -pull * dy / d)
@@ -228,11 +227,21 @@ public struct GraphLayout: Sendable {
             var pos = positions[p]!
             v.x = (v.x + (force[p]!.x - f.gravity * pos.x) * dt) * f.damping
             v.y = (v.y + (force[p]!.y - f.gravity * pos.y) * dt) * f.damping
-            let limit = f.keepDiscInside ? 1 - WideGraphMetrics.nodeRadius(p) : 1
+            // Håll hela noden (med radie) inom ramen, inte bara mittpunkten.
+            let limit = 1 - WideGraphMetrics.nodeRadius(p)
             pos.x = min(limit, max(-limit, pos.x + v.x))
             pos.y = min(limit, max(-limit, pos.y + v.y))
             velocities[p] = v
             positions[p] = pos
         }
     }
+}
+
+/// Block: partier som hänger ihop via dragning (minst två partier per block), från vänster till höger.
+public func clusters(_ relations: [KeyRelation]) -> [[P]] {
+    var parent = Dictionary(uniqueKeysWithValues: P.allCases.map { ($0, $0) })
+    func root(_ p: P) -> P { var r = p; while parent[r]! != r { r = parent[r]! }; return r }
+    for r in relations where r.kind == .attraction { parent[root(r.pair.a)] = root(r.pair.b) }
+    let groups = Dictionary(grouping: leftToRight, by: root).values.filter { $0.count >= 2 }
+    return groups.sorted { leftToRight.firstIndex(of: $0[0])! < leftToRight.firstIndex(of: $1[0])! }
 }

@@ -1,13 +1,10 @@
-// Gemensamt för de fyra perspektivspelen: en sak i taget, 2–3 val per steg,
-// och varje val säger vad det kostar. Tiden går framåt en rubrik per val.
+// Byggstenar för talmannens skärm: valkort, mätare, effektruta och slut.
 
 public struct Choice: Identifiable, Equatable, Sendable {
     public let id: String
     public let title: String
-    /// Vad valet kostar eller ger, i klartext.
-    public let cost: String
-    /// En kvickhet i kursiv (spelledarens röst). Hör till valet, aldrig till rubriken.
-    public var quip: String? = nil
+    /// En kort, torr rad (spelledarens röst). Hör till valet, aldrig till rubriken. Följderna syns först efteråt.
+    public let quip: String
 }
 
 public struct Meter: Equatable, Sendable {
@@ -36,63 +33,6 @@ public struct Effect: Equatable, Sendable {
     /// Korta rader om vad som ändrades, t.ex. "Tålamod −1".
     public let chips: [String]
 }
-
-public protocol PerspectiveGame: Sendable {
-    /// Visa inte valens följder i förväg (de syns i effektrutan efteråt).
-    static var hidesCosts: Bool { get }
-    /// Effekten av senaste valet. Visas tills `proceed()`.
-    var effect: Effect? { get }
-    init()
-    static var title: String { get }
-    /// En rad i startmenyn: vem du är och vad du vill.
-    static var role: String { get }
-    /// Starttipset som visas första gången.
-    static var tips: [String] { get }
-    /// Antal rubriker som slagit ner (0 = valnatten).
-    var headlineIndex: Int { get }
-    var question: String { get }
-    /// Tomt medan ett utfall visas och när spelet är slut.
-    var choices: [Choice] { get }
-    var meters: [Meter] { get }
-    /// Vad senaste valet ledde till. Visas tills `proceed()`.
-    var outcome: String? { get }
-    var ending: Ending? { get }
-    mutating func choose(_ id: String)
-    /// Spelaren har läst utfallet: visa slutet eller gå vidare till nästa rubrik.
-    mutating func proceed()
-}
-
-extension PerspectiveGame {
-    public var headline: Headline { BrytareModell.headline(after: headlineIndex) }
-    public static var hidesCosts: Bool { false }
-    public var effect: Effect? { nil }
-}
-
-/// Turordningen alla spelen delar: välj, läs utfallet, gå vidare.
-struct Turns: Sendable {
-    private(set) var headlineIndex = 0
-    private(set) var outcome: String?
-    private(set) var ending: Ending?
-    private var pendingEnding: Ending?
-
-    var canChoose: Bool { outcome == nil && ending == nil }
-    var isLastHeadline: Bool { headlineIndex >= timelineEnd }
-
-    mutating func resolve(_ text: String, ending: Ending? = nil) {
-        outcome = text
-        pendingEnding = ending
-    }
-
-    mutating func proceed() {
-        guard outcome != nil else { return }
-        outcome = nil
-        if !isLastHeadline { headlineIndex += 1 }
-        ending = pendingEnding
-    }
-}
-
-/// "151 av 175" – hur nära 175 i stöd ett utfall är.
-func supportText(_ r: VoteResult) -> String { "\(r.supportSeats) av \(majority)" }
 
 func voteText(_ r: VoteResult) -> String {
     r.passed ? "Omröstningen går igenom: \(r.supportSeats) stöd, \(r.nej) nej."

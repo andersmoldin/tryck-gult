@@ -1,26 +1,21 @@
-# Provbänk – prototyper för ärende #4
+# Talmannen – prototyp för ärende #4
 
-En grov app att provspela på telefonen. Startmenyn har fyra mycket små spel om samma höst, vart och ett ur ett eget perspektiv. Alla följer de sex verkliga rubrikerna från valnatten till 18 nov:
+En grov app att provspela på telefonen. Du är talmannen hösten 2026 och ska få fram en statsminister innan det blir extraval.
 
-1. **Statsministerkandidaten** – du leder S och behöver både V och C, men deras krav utesluter varandra.
-2. **Talmannen** – varje vecka är en situation med 2–3 val: sondera, ge förhandlingsuppdrag, sätt en deadline eller låt någon försöka. Stödet är okänt tills du sonderat; att ta reda på kostar riksdagens tålamod, att gissa kostar försök. Poängen är hur många gånger samtalen fortsatte (omgång 3).
-3. **Vågmästarpartiet** – du leder C. Extraval går att undvika, men bara genom att bryta ett löfte.
-4. **Kommentatorn** – du gissar nästa rubrik bland tre. Rätt gissning ger poäng, och tre fel ger sparken.
+- Varje vecka har en **verklig rubrik som ankare** (I VERKLIGHETEN, datum, citat, källa) och en **situation** med 2–3 val. Knapparna säger vad som händer i kammaren ("Låt kammaren rösta om Andersson"); vad valet kostar syns först i effektrutan efteråt.
+- Valen **förgrenar handlingen**: lutar du åt Andersson, Kristersson eller processen blir nästa veckas situation och val olika.
+- Mellan dragen kommer **rykten** från förhandlingar i det fördolda ("C och S har setts äta lunch"). De är spelets påhitt, märkta RYKTE, och ändrar relationerna i nätverket.
+- **Nätverket**: partier som samarbetar dras ihop av grafens fysik och samlas i ett moln; röda linjer knuffar isär. Varje linje har en emoji (🤝 samarbete, 💬 förhandlar, ✋ röd linje). Noderna hoppar till och molnen puffar när något ändras.
+- Rösterna följer historien – ingen får ihop 175. Poängen är satiren: hur många gånger "samtalen fortsätter", och en torr dom på slutskärmen. Brasklappen: "Alla rubriker i spelet är verkliga. Vi hittade inte på dem. Vi hade inte behövt. Ryktena hittade vi på."
 
-Alla spelen har samma upplägg. Du gör en sak i taget och väljer mellan 2–3 alternativ, och varje knapp visar vad valet kostar. Ett starttips visas första gången (`?` visar det igen). En kraftriktad graf visar partierna som noder och bara några få nyckelrelationer: vita linjer drar ihop, gula förhandlar och röda är konflikter. Linjer som senaste rubriken ändrade är tjockare. Tryck på grafen för en helskärmsvy med etiketter och en lista där det nya är märkt.
+Frågan provspelningen ska besvara: **förstår spelaren varför regeringen föll, och är det kul att förlora?**
 
-Talmannen bygger dessutom in fem ingredienser från genomgången av kortspelet Swärje (namn och bilder är inte lånade): den verkliga rubriken i ett eget kort och kvickheten på valkortet, en torr spelledarröst, poäng som är själva satiren, en omvänd brasklapp ("Alla rubriker i spelet är verkliga. Vi hittade inte på dem. Vi hade inte behövt.") och skrivregeln att reta alla lika mycket.
-
-**Omgång 5 (bara talmannen):** relationerna visas i ett stort nätverk där partierna står långt isär (`GraphLayout(style: .wide)` och `WideGraphMetrics`; testat rubrik för rubrik som appen kör grafen, så att noder och emojier varken krockar eller hamnar utanför ramen) och varje linje har en emoji i mitten: 🤝 samarbete, 💬 förhandlar, ✋ röd linje. Noderna hoppar till när en rubrik ändrar linjerna. Knapparna säger vad som händer i kammaren ("Låt kammaren rösta om Andersson") med högst en kort rad till; följderna syns först i effektrutan efter valet. Menyn har knappen "Visa starthjälpen igen".
-
-Längst ner i menyn ligger **Brytare** från omgång 1 som jämförelse.
-
-Frågan provspelningen ska besvara: **förstår spelaren varför regeringen föll, och är det kul att förlora?** Den nya frågan är också vilket perspektiv som fungerar bäst.
+Omgång 1–5 prövade brytare, fyra perspektiv och andra sätt att visa relationerna; kaptenen valde talmannen (omgång 6). Historiken finns i git.
 
 ## Innehåll
 
-- `BrytareModell/` – spelmodellen som ett rent Swift-paket utan SwiftUI. Det innehåller mandat, krav och rubriker, hur partierna röstade längs tidslinjen (`Historia.swift`), de fyra spelen med 175-regeln och extraval (`*Game.swift`, gemensamt protokoll i `Perspektiv.swift`) och grafens linjer och kraftlayout (`Graf.swift`). Brytarvarianten ligger i `Game.swift`.
-- `Brytare/` – SwiftUI-appen. `PerspectiveScreen` visar alla fyra spelen, och `GraphView` ritar grafen.
+- `BrytareModell/` – spelmodellen som ett rent Swift-paket utan SwiftUI: partier och rubriker, hur partierna röstade längs tidslinjen (`Historia.swift`), talmannens manus, rykten och regler (`SpeakerGame.swift`), och nätverkets linjer, block, kraftlayout och emojiplacering (`Graf.swift`).
+- `Brytare/` – SwiftUI-appen: `SpeakerScreen` och `GraphView`.
 - `Brytare.xcodeproj` – Xcode-projektet. Det signeras automatiskt med team `MT5TUADUWK` (Anders Moldin, Personal Team).
 
 ## Testa reglerna (ingen simulator)
