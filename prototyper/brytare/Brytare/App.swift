@@ -13,6 +13,9 @@ struct ProvbankApp: App {
     }
 }
 
+/// Alla perspektivspel i menyn (används också när starthjälpen nollställs).
+let perspectiveTitles = [CandidateGame.title, SpeakerGame.title, KingmakerGame.title, CommentatorGame.title]
+
 struct MenuView: View {
     @State private var helpReset = false
     var body: some View {
@@ -30,8 +33,8 @@ struct MenuView: View {
                 }
                 Section {
                     Button("Visa starthjälpen igen") {
-                        for title in [CandidateGame.title, SpeakerGame.title, KingmakerGame.title, CommentatorGame.title] {
-                            UserDefaults.standard.removeObject(forKey: "tipsSeen.\(title)")
+                        for title in perspectiveTitles {
+                            UserDefaults.standard.removeObject(forKey: tipsSeenKey(title))
                         }
                         helpReset = true
                     }
@@ -50,6 +53,7 @@ struct MenuView: View {
                 }
             }
             .navigationTitle("Tryck gult!")
+            .onAppear { helpReset = false }
         }
     }
 

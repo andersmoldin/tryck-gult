@@ -12,7 +12,8 @@ public struct Seat: Sendable {
 }
 
 /// Riksdagens 349 säten i en halvcirkel, partierna från vänster till höger.
-public func hemicycleSeats(rows: Int = 10) -> [Seat] {
+public func hemicycleSeats() -> [Seat] {
+    let rows = 10
     let inner = 0.4
     let radii = (0..<rows).map { inner + (1 - inner) * Double($0) / Double(rows - 1) }
     // Fördela sätena på raderna efter radielängd (största rest får de sista).
@@ -25,7 +26,7 @@ public func hemicycleSeats(rows: Int = 10) -> [Seat] {
     var spots: [(angle: Double, r: Double)] = []
     for (r, n) in zip(radii, counts) {
         for k in 0..<n {
-            // Avrundning kan ge en vinkel en hårsmån utanför [0, π]; säten under golvet vore fel.
+            // π·(n−1)/(n−1) kan avrundas till en hårsmån över π (sin < 0); klampa så att inget säte hamnar under golvet.
             let angle = n == 1 ? Double.pi / 2 : min(Double.pi, max(0, Double.pi * Double(n - 1 - k) / Double(n - 1)))
             spots.append((angle, r))
         }

@@ -72,7 +72,7 @@ public let speakerScript: [SpeakerStep] = [
         extras: [SpeakerCard(action: .deadline, title: "Sätt en egen deadline",
                              quip: "Om C får ha en deadline får du också ha en.")],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "Rödgröna plus C. Det är en majoritet om C vill. C vill ha ett paket först.",
+        voteQuips: [.andersson: "Rödgröna plus C. Det går om C vill. C vill ha ett paket först.",
                     .kristersson: "M, KD och L har ett paket. C har inte öppnat det."]),
     SpeakerStep(
         situation: "S vill regera utan V. V säger att kravet ”inte går att påverka”. Båda menar det. Det är det som är problemet.",
@@ -86,21 +86,21 @@ public let speakerScript: [SpeakerStep] = [
         extras: [SpeakerCard(action: .meeting, title: "Kalla S och V till ditt kontor",
                              quip: "Du bjuder på kaffe. Ingen dricker.")],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "S + MP + C. Det är en majoritet om man räknar generöst.",
+        voteQuips: [.andersson: "S + MP + C. På papperet ser det ut som en regering.",
                     .kristersson: "KD har 22 mandat och ett tydligt krav: Kristersson. Det räcker inte heller."]),
     SpeakerStep(
         situation: "S och V har mötts i två timmar. Beskedet var detsamma som tidigare, vilket i sig är ett slags besked.",
         extras: [SpeakerCard(action: .probe, title: "Sonderingsrunda igen",
                              quip: "Samma kaffe, samma frågor. MP svarar som S. Det är det enda som är enkelt.")],
         votes: [.andersson, .kristersson],
-        voteQuips: [.andersson: "S, MP och C har 146. De har haft 146 sedan C bestämde sig.",
+        voteQuips: [.andersson: "S, MP och C står där de stod. C bestämde sig, och sedan stod allt still.",
                     .kristersson: "SD trycker gult igen. Det börjar likna en vana."]),
     SpeakerStep(
         situation: "C säger nej till V i regeringen, även om alternativet är extraval. Alternativet hörde det.",
         extras: [],
         votes: [.andersson, .kristersson],
         voteQuips: [.andersson: "V röstar nej. C röstar ja. S röstar på sig själv. Det räcker inte.",
-                    .kristersson: "M, KD, L och SD har fortfarande 173. De har haft 173 länge nu."]),
+                    .kristersson: "M, KD, L och SD är överens om Kristersson. De är inte fler nu än förra veckan."]),
 ]
 
 public struct SpeakerGame: PerspectiveGame {
@@ -200,7 +200,8 @@ public struct SpeakerGame: PerspectiveGame {
             effect = Effect(title: "DEADLINE SATT", tone: .neutral,
                             chips: (gained ? ["Tålamod +1"] : []) + ["Samtalen fortsätter +1", "Nästa vecka: omröstning"])
             mustVote = true
-            turns.resolve("Du sätter en deadline till nästa vecka. Riksdagen gillar deadlines. Tålamodet stiger.")
+            turns.resolve("Du sätter en deadline till nästa vecka. "
+                          + (gained ? "Riksdagen gillar deadlines. Tålamodet stiger." : "Tålamodet var redan fullt."))
         case .vote(let c):
             vote(c)
         }

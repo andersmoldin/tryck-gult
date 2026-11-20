@@ -142,6 +142,15 @@ struct SpeakerGameTests {
         g.choose("deadline")
         #expect(g.effect == Effect(title: "DEADLINE SATT", tone: .neutral,
                                    chips: ["Samtalen fortsätter +1", "Nästa vecka: omröstning"]))
+        #expect(g.outcome == "Du sätter en deadline till nästa vecka. Tålamodet var redan fullt.")
+    }
+
+    @Test("Kvickheterna avslöjar inte stödet i förväg")
+    func ingaSiffror() {
+        let quips = speakerScript.flatMap { $0.cards.map(\.quip) }
+        for n in ["146", "151", "121", "111", "173", "majoritet"] {
+            #expect(!quips.contains { $0.contains(n) }, "\(n)")
+        }
     }
 
     @Test("Reta alla lika mycket: varje parti får en kvickhet")

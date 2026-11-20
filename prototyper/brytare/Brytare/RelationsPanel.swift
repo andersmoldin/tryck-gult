@@ -5,7 +5,7 @@ import BrytareModell
 /// Ingen text på linjer; tryck på ett parti eller en ruta för att läsa klartext under.
 struct RelationsPanel: View {
     let headlineIndex: Int
-    @AppStorage("relationsView") private var mode = Mode.hemicycle.rawValue
+    @AppStorage("relationsView") private var mode: Mode = .hemicycle
     @State private var selected: P = .C
 
     enum Mode: String, CaseIterable, Identifiable {
@@ -23,12 +23,13 @@ struct RelationsPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Picker("Visa", selection: $mode) {
-                ForEach(Mode.allCases) { Text($0.title).tag($0.rawValue) }
+                ForEach(Mode.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
-            switch Mode(rawValue: mode) ?? .hemicycle {
+            switch mode {
             case .hemicycle:
                 HemicycleView(headlineIndex: headlineIndex, selected: $selected)
+                RelationLegend()
                 PartyRelationsList(party: selected, headlineIndex: headlineIndex)
             case .matrix:
                 MatrixView(headlineIndex: headlineIndex)
@@ -77,6 +78,10 @@ struct HemicycleView: View {
         func point(_ x: Double, _ y: Double) -> CGPoint {
             CGPoint(x: center.x + CGFloat(x) * radius, y: center.y - CGFloat(y) * radius)
         }
+        /// Omvänt: en punkt på skärmen i halvcirkelns enheter.
+        func unit(_ p: CGPoint) -> (x: Double, y: Double) {
+            (Double((p.x - center.x) / radius), Double((center.y - p.y) / radius))
+        }
     }
 
     var body: some View {
@@ -86,10 +91,10 @@ struct HemicycleView: View {
             Canvas { ctx, _ in draw(in: &ctx, frame: frame, lines: lines) }
                 .contentShape(Rectangle())
                 .gesture(SpatialTapGesture().onEnded { tap in
-                    let dx = Double(tap.location.x - frame.center.x)
-                    let dy = Double(frame.center.y - tap.location.y)
-                    let angle = atan2(max(dy, 0), dx)
-                    selected = P.allCases.min { abs(meanAngle($0) - angle) < abs(meanAngle($1) - angle) } ?? selected
+                    // Välj partiet för sätet närmast trycket (inte närmaste medelvinkel, som slår fel vid kanterna).
+                    let u = frame.unit(tap.location)
+                    func d(_ s: Seat) -> Double { (s.x - u.x) * (s.x - u.x) + (s.y - u.y) * (s.y - u.y) }
+                    if let seat = seats.min(by: { d($0) < d($1) }) { selected = seat.party }
                 })
         }
         .frame(height: 190)
@@ -143,7 +148,8 @@ struct HemicycleView: View {
 
 struct MatrixView: View {
     let headlineIndex: Int
-    @State private var picked: Pair?
+    /// Rutan spelaren tryckte på, i rad- och kolumnordning.
+    @State private var picked: (row: P, col: P)?
 
     var body: some View {
         let lines = Dictionary(uniqueKeysWithValues: keyRelations(after: headlineIndex).map { ($0.pair, $0) })
@@ -169,12 +175,12 @@ struct MatrixView: View {
                 Text("orange ram = nytt").foregroundStyle(.orange)
             }
             .font(.caption2)
-            if let pair = picked {
-                if let line = lines[pair] {
-                    Text("\(pair.a.rawValue) \(line.kind.symbol) \(pair.b.rawValue): \(line.label)")
+            if let (row, col) = picked {
+                if let line = lines[Pair(row, col)] {
+                    Text("\(row.rawValue) \(line.kind.symbol) \(col.rawValue): \(line.label)")
                         .font(.subheadline).foregroundStyle(line.kind.color)
                 } else {
-                    Text("\(pair.a.rawValue) och \(pair.b.rawValue): ingen tydlig relation.").font(.subheadline)
+                    Text("\(row.rawValue) och \(col.rawValue): ingen tydlig relation.").font(.subheadline)
                 }
             } else {
                 Text("Tryck på en ruta för att läsa vad den betyder.").font(.caption).foregroundStyle(.secondary)
@@ -183,9 +189,9 @@ struct MatrixView: View {
     }
 
     private func cell(row: P, col: P, line: KeyRelation?) -> some View {
-        let isPicked = picked == Pair(row, col)
+        let isPicked = picked.map { $0.row == row && $0.col == col } ?? false
         return Button {
-            if row != col { picked = Pair(row, col) }
+            if row != col { picked = (row, col) }
         } label: {
             Text(line?.kind.symbol ?? "")
                 .font(.system(size: 15, weight: .bold))
@@ -207,6 +213,28 @@ extension RelationKind {
         case .attraction: return "drar åt"
         case .negotiating: return "förhandlar"
         case .conflict: return "krockar"
+        }
+    }
+}
+
+/// Teckenförklaring för bågarna i halvcirkeln.
+struct RelationLegend: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            swatch(.white, "drar åt")
+            swatch(.yellow, "förhandlar", dashed: true)
+            swatch(.red, "krockar")
+            Text("tjock = nytt").foregroundStyle(.secondary)
+        }
+        .font(.caption2)
+    }
+
+    private func swatch(_ color: Color, _ label: String, dashed: Bool = false) -> some View {
+        HStack(spacing: 4) {
+            Path { p in p.move(to: CGPoint(x: 0, y: 1.5)); p.addLine(to: CGPoint(x: 16, y: 1.5)) }
+                .stroke(color, style: StrokeStyle(lineWidth: 3, dash: dashed ? [3, 2] : []))
+                .frame(width: 16, height: 3)
+            Text(label)
         }
     }
 }
