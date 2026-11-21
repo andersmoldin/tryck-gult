@@ -26,7 +26,7 @@ public enum RumorMode: String, CaseIterable, Sendable {
 }
 
 public struct NewsItem: Equatable, Sendable {
-    public enum Kind: Sendable { case real, rumor }
+    public enum Kind: Sendable { case real, rumor, anonymous }
     public enum Tag: Sendable { case opens, locks, lampOut, none }
     public let day: Int
     public let kind: Kind

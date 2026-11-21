@@ -16,10 +16,37 @@ struct ProvbankApp: App {
 
 struct MenuView: View {
     @AppStorage("rumorMode") private var rumorMode: RumorMode = .ownMovesOnly
+    @AppStorage("nk.leakWhileRunning") private var leakWhileRunning = true
+    @AppStorage("nk.anonymousSources") private var anonymousSources = true
+    @AppStorage("nk.finale") private var finale = true
+    @AppStorage("sk.hardLinesCanFall") private var hardLinesCanFall = false
+
+    private var newsSettings: NewsKnotSettings {
+        var s = NewsKnotSettings()
+        s.rumors = rumorMode
+        s.leakWhileRunning = leakWhileRunning
+        s.anonymousSources = anonymousSources
+        s.finale = finale
+        return s
+    }
     @State private var helpReset = false
 
     var body: some View {
         List {
+            Section {
+                NavigationLink {
+                    ClockScreen(game: NewsKnotGame(settings: newsSettings))
+                } label: {
+                    entry("Nyhetsknuten", "Du är knuten. Nyheterna stoppar tiden – reagera, läck i rätt tid, vinn på extraval.")
+                }
+                NavigationLink {
+                    ClockScreen(game: SystemKnotGame(seed: UInt64.random(in: 0...UInt64.max), hardLinesCanFall: hardLinesCanFall))
+                } label: {
+                    entry("Systemknuten", "Partierna förhandlar av sig själva. Stoppa Ribban med tre stämplar.")
+                }
+            } header: {
+                Text("Omgång 8 – två knutar")
+            }
             Section {
                 NavigationLink {
                     ClockScreen(game: KnutenGame(rumors: rumorMode))
@@ -43,9 +70,13 @@ struct MenuView: View {
             }
             Section {
                 Picker("Rykten", selection: $rumorMode) {
-                    Text("Bara om mina drag").tag(RumorMode.ownMovesOnly)
+                    Text("Bara mina drag / föremål").tag(RumorMode.ownMovesOnly)
                     Text("Även påhittade partimöten").tag(RumorMode.alsoRealPartyMeetings)
                 }
+                Toggle("Nyhetsknuten: läcka medan tiden går", isOn: $leakWhileRunning)
+                Toggle("Nyhetsknuten: ENLIGT UPPGIFTER-nyheter", isOn: $anonymousSources)
+                Toggle("Nyhetsknuten: TÄNK OM-slutspurt efter 18 nov", isOn: $finale)
+                Toggle("Systemknuten: hårda röda linjer kan falla", isOn: $hardLinesCanFall)
                 Button("Visa starthjälpen igen") {
                     for key in UserDefaults.standard.dictionaryRepresentation().keys where key.hasPrefix("tipsSeen.") {
                         UserDefaults.standard.removeObject(forKey: key)

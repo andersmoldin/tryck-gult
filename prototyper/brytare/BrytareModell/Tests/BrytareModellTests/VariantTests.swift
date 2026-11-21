@@ -8,7 +8,7 @@ func advance<G: ClockGame>(_ g: inout G, days: Int = 1) {
 }
 
 func readNews<G: ClockGame>(_ g: inout G) {
-    while g.world.paused != nil && g.ending == nil { g.resume() }
+    while g.paused != nil && g.ending == nil { g.resume() }
 }
 
 @Suite("Knuten")

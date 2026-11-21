@@ -1,11 +1,35 @@
 // Omgång 7: två varianter där klockan går och nyheter pausar tiden.
 
+/// En vågrät stapel (t.ex. Uppgörelsens spår eller Ribban).
+public struct Bar: Equatable, Sendable {
+    public let label: String
+    /// Värde och "nästan där"-värde i samma enhet som `max`.
+    public let value: Double
+    public let ghost: Double
+    public let max: Double
+    /// Gränser där zonerna börjar (t.ex. 60 och 85, eller strecket 175).
+    public let marks: [Double]
+    public let isLeading: Bool
+}
+
 /// Gemensamt för varianterna med klocka (appen visar dem med samma skärm).
 public protocol ClockGame: Sendable {
     var title: String { get }
     var tips: [String] { get }
-    var world: World { get }
+    var day: Int { get }
+    /// Nyheten som visas; tiden står still tills spelaren fortsätter (eller väljer en reaktion).
+    var paused: NewsItem? { get }
+    /// Linjerna i nätverket (tomt = inget nätverk).
+    var relations: [KeyRelation] { get }
     var meters: [Meter] { get }
+    /// Staplar under mätarna (tomt = inga).
+    var bars: [Bar] { get }
+    /// Reaktioner på nyheten som visas (tomt = bara "Fortsätt").
+    var newsChoices: [Choice] { get }
+    /// En kort rad om sådant simuleringen hittat på (märkt TÄNK OM).
+    var ticker: String? { get }
+    /// Spelarens figur (bild i asset-katalogen), om varianten har en.
+    var figure: String? { get }
     /// Korten som går att spela just nu (bara de som spelaren har råd med).
     var cards: [Choice] { get }
     /// Vad senaste kortet ledde till.
@@ -14,6 +38,26 @@ public protocol ClockGame: Sendable {
     mutating func play(_ id: String)
     mutating func tick(days: Int)
     mutating func resume()
+}
+
+extension ClockGame {
+    public var bars: [Bar] { [] }
+    public var newsChoices: [Choice] { [] }
+    public var ticker: String? { nil }
+    public var figure: String? { nil }
+}
+
+/// Knuten och Hamna i regering spelar i en `World`.
+extension KnutenGame {
+    public var day: Int { world.day }
+    public var paused: NewsItem? { world.paused }
+    public var relations: [KeyRelation] { world.relations }
+}
+
+extension RegeringGame {
+    public var day: Int { world.day }
+    public var paused: NewsItem? { world.paused }
+    public var relations: [KeyRelation] { world.relations }
 }
 
 let fiction = "Rubrikerna är verkliga. Ryktena och utgången är spelets påhitt – det hände inte i verkligheten."

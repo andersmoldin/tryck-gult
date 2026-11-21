@@ -5,6 +5,8 @@ public struct Choice: Identifiable, Equatable, Sendable {
     public let title: String
     /// En kort, torr rad (spelledarens röst). Hör till valet, aldrig till rubriken. Följderna syns först efteråt.
     public let quip: String
+    /// Bild i asset-katalogen (t.ex. en stämpel), om kortet har en.
+    public var icon: String? = nil
 }
 
 public struct Meter: Equatable, Sendable {

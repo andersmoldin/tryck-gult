@@ -2,6 +2,13 @@
 
 En grov app att provspela på telefonen. Startmenyn väljer variant.
 
+## Omgång 8: två knutar (efter `tg-knut-nyhet` och `tg-knut-system`)
+
+- **Nyhetsknuten:** du är knuten och vinner på extraval. Mätaren Uppgörelsen har tre spår (◀ Vänster, ● Mitten, ▶ Höger) med zonerna 60 och 85. Nyheter stoppar tiden och du väljer en reaktion (Påminn, Följdfråga, Inga kommentarer); gåvor – när partiledarna låser sig själva – har en enda knapp. Mellan nyheterna läcker du till en dag framåt (hårdare på deadline- och omröstningsdagar). Fyra släckta lampor = EXTRAVAL. Kaptenens öppna frågor är inställningar i menyn med rapportens förval: slutspurt efter 18 nov, läcka medan tiden går, ENLIGT UPPGIFTER-nyheter, och ryktenas innehåll (föremål och processer, eller även partimöten).
+- **Systemknuten:** rapportens simulering översatt till Swift (`Systemknuten.swift`): trådar mellan partierna växer mot sina tak, tålamod brinner ner tills partier släpper mjuka krav, och Ribban visar mandat som trycker ja eller gult för det ledande spåret mot 175. Tre stämplar – LÄCKA, KRAV, FÖRHALA – laddas om med tiden. Testerna kör rapportens testspelare: utan drag vinner man cirka 27 %, med vaken läsning cirka 87 %. Inställning: hårda röda linjer kan falla (förval: aldrig).
+- Grafiken (Knuten-figuren, stämplar och lampor) är utbruten ur tavlornas Fable-ritade ark till `Brytare/Assets.xcassets`.
+- Förvalen och varför står i `data/tg-proto-brytare/design-omgang8.md` i firstmate-hemmet.
+
 ## Omgång 7: klockan går (efter `tg-plague`-genomgången)
 
 Dagarna rullar från valdagen 13 sep till 18 nov (1,5 s per dag, paus i verktygsfältet). När en **nyhet** kommer stannar tiden tills du trycker Fortsätt. Nyheterna är **I VERKLIGHETEN** (verkliga händelser ur researchen i ärende #2, med källa) eller **RYKTE** (spelets påhitt, lila). Inget sprids – nyheterna och dina drag ändrar relationerna i nätverket. Bara genrens mekanik är lånad: inga namn, termer, layout eller bilder från förlagan.
@@ -25,7 +32,7 @@ Omgång 1–5 prövade brytare, fyra perspektiv och andra sätt att visa relatio
 
 ## Innehåll
 
-- `BrytareModell/` – spelmodellen som ett rent Swift-paket utan SwiftUI: klockan, nyheterna och ryktena (`World.swift`), Knuten och Hamna i regering (`Varianter.swift`), partier och rubriker, hur partierna röstade längs tidslinjen (`Historia.swift`), talmannens manus, rykten och regler (`SpeakerGame.swift`), och nätverkets linjer, block, kraftlayout och emojiplacering (`Graf.swift`).
+- `BrytareModell/` – spelmodellen som ett rent Swift-paket utan SwiftUI: klockan, nyheterna och ryktena (`World.swift`), Knuten och Hamna i regering (`Varianter.swift`), Nyhetsknuten (`Nyhetsknuten.swift`), Systemknuten (`Systemknuten.swift`), partier och rubriker, hur partierna röstade längs tidslinjen (`Historia.swift`), talmannens manus, rykten och regler (`SpeakerGame.swift`), och nätverkets linjer, block, kraftlayout och emojiplacering (`Graf.swift`).
 - `Brytare/` – SwiftUI-appen: `MenuView` (variantväljare och inställningar), `ClockScreen` (omgång 7), `SpeakerScreen` (talmannen) och `GraphView` (nätverket).
 - `Brytare.xcodeproj` – Xcode-projektet. Det signeras automatiskt med team `MT5TUADUWK` (Anders Moldin, Personal Team).
 
