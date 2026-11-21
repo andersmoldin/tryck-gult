@@ -12,31 +12,45 @@ const app = document.getElementById("app");
 
 // MARK: Inställningar (sparas i webbläsaren, samma nycklar som appens AppStorage)
 
-const defaults = {
-  "rumorMode": RumorMode.ownMovesOnly,
-  "nk.leakWhileRunning": true,
-  "nk.anonymousSources": true,
-  "nk.finale": true,
-  "sk.hardLinesCanFall": false,
-  "clock.secondsPerDay": 3.5,
-  "clock.turnBased": false,
+const yesNo = [true, false];
+const gameTitles = ["Nyhetsknuten", "Systemknuten"];
+
+/** Varje inställning: förval och tillåtna värden. Ett lagrat värde utanför listan ger förvalet. */
+const settingsSchema = {
+  "rumorMode": { fallback: RumorMode.ownMovesOnly, allowed: Object.values(RumorMode) },
+  "nk.leakWhileRunning": { fallback: true, allowed: yesNo },
+  "nk.anonymousSources": { fallback: true, allowed: yesNo },
+  "nk.finale": { fallback: true, allowed: yesNo },
+  "sk.hardLinesCanFall": { fallback: false, allowed: yesNo },
+  "clock.secondsPerDay": { fallback: 3.5, allowed: [5.0, 3.5, 2.0] },
+  "clock.turnBased": { fallback: false, allowed: yesNo },
+  ...Object.fromEntries(gameTitles.map((t) => [`tipsSeen.${t}`, { fallback: false, allowed: yesNo }])),
 };
 
-/** localStorage kan saknas eller vara spärrat (privat läge); då gäller förvalen för stunden. */
+/**
+ * localStorage kan saknas, vara spärrat eller fullt (privat läge). Det som inte gick att spara ligger då kvar
+ * i minnet och läses före localStorage, så att inställningen gäller resten av besöket.
+ */
 const memory = new Map();
 function load(key) {
-  let raw = null;
-  try { raw = localStorage.getItem(key); } catch { raw = memory.get(key) ?? null; }
-  if (raw === null) return defaults[key];
-  try { return JSON.parse(raw); } catch { return defaults[key]; }
+  const { fallback, allowed } = settingsSchema[key];
+  let raw = memory.get(key) ?? null;
+  if (raw === null) { try { raw = localStorage.getItem(key); } catch { raw = null; } }
+  if (raw === null) return fallback;
+  let value;
+  try { value = JSON.parse(raw); } catch { return fallback; }
+  return allowed.includes(value) ? value : fallback;
 }
 function save(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch { memory.set(key, JSON.stringify(value)); }
+  const raw = JSON.stringify(value);
+  try { localStorage.setItem(key, raw); memory.delete(key); } catch { memory.set(key, raw); }
 }
-function tipsSeen(title) { return load(`tipsSeen.${title}`) === true; }
+const tipsKey = (title) => `tipsSeen.${title}`;
+function tipsSeen(title) { return load(tipsKey(title)) === true; }
 function clearTipsSeen() {
-  for (const title of ["Nyhetsknuten", "Systemknuten"]) {
-    try { localStorage.removeItem(`tipsSeen.${title}`); } catch { memory.delete(`tipsSeen.${title}`); }
+  for (const title of gameTitles) {
+    memory.delete(tipsKey(title));
+    try { localStorage.removeItem(tipsKey(title)); } catch { /* bara minnet fanns */ }
   }
 }
 
@@ -83,8 +97,8 @@ const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)")
 // MARK: Navigering (#nyhetsknuten och #systemknuten, så att telefonens bakåtknapp går till menyn)
 
 const variants = {
-  nyhetsknuten: { make: () => { const s = newsSettings(); return () => new NewsKnotGame(s); }, theme: "nyhet" },
-  systemknuten: { make: () => { const seed = randomSeed(), hard = load("sk.hardLinesCanFall"); return () => new SystemKnotGame(seed, hard); }, theme: "system" },
+  nyhetsknuten: { make: () => { const s = newsSettings(); return () => new NewsKnotGame(s); }, theme: "nyhet", themeColor: "#171717" },
+  systemknuten: { make: () => { const seed = randomSeed(), hard = load("sk.hardLinesCanFall"); return () => new SystemKnotGame(seed, hard); }, theme: "system", themeColor: "#1c3629" },
 };
 
 let screen = null; // { stop() } för skärmen som visas
@@ -108,9 +122,14 @@ window.addEventListener("hashchange", route);
 
 // MARK: Menyn
 
+/** Sidans palett och webbläsarens färg på statusraden. */
+function setTheme(theme, color) {
+  if (theme) document.documentElement.setAttribute("data-theme", theme); else document.documentElement.removeAttribute("data-theme");
+  document.querySelector('meta[name="theme-color"]').setAttribute("content", color);
+}
+
 function showMenu() {
-  document.documentElement.removeAttribute("data-theme");
-  document.querySelector('meta[name="theme-color"]').setAttribute("content", "#000000");
+  setTheme(null, "#000000");
   let helpReset = false;
   const foot = h("p", { class: "foot" });
   const setFoot = () => {
@@ -156,26 +175,25 @@ function startGame(variant) {
   let game = fresh();
   let running = true;
   let tipsOpen = false;
-  let timer = 0;
-  let stopped = false;
+  let timer = 0; // 0 = klockan väntar inte på någon dag just nu
   const turnBased = load("clock.turnBased") === true;
   const secondsPerDay = Number(load("clock.secondsPerDay")) || 3.5;
 
-  document.documentElement.setAttribute("data-theme", variant.theme);
-  document.querySelector('meta[name="theme-color"]').setAttribute("content", variant.theme === "nyhet" ? "#171717" : "#1c3629");
+  setTheme(variant.theme, variant.themeColor);
 
   const pauseBtn = h("button", { class: "icon-btn", type: "button", onclick: () => { running = !running; render(); } });
   const hud = h("section", { class: "hud" });
   const bars = h("section", { class: "bars", "aria-label": "Mätaren" });
   const notices = h("section", { class: "notices", "aria-label": "Notiser" });
-  const main = h("section", { class: "main" });
+  // Bara huvudkortet läses upp av skärmläsare; det byts bara när en ny nyhet eller effekt kommer.
+  const main = h("section", { class: "main", "aria-live": "polite" });
   const actions = h("section", { class: "actions", "aria-label": "Handlingar" });
   const board = makeBoard(() => game.relations);
   const overlayHost = h("div");
 
   fill(app, h("div", { class: "screen" },
     h("header", { class: "bar" },
-      h("a", { class: "icon-btn", href: "#", onclick: toMenu, "aria-label": "Till menyn", style: "display:flex;align-items:center;text-decoration:none" }, "‹ Meny"),
+      h("a", { class: "icon-btn link-btn", href: "#", onclick: toMenu, "aria-label": "Till menyn" }, "‹ Meny"),
       h("h1", {}, game.title),
       turnBased ? null : pauseBtn,
       h("button", { class: "icon-btn", type: "button", "aria-label": "Så spelar du", onclick: () => openTips() }, "?")),
@@ -194,6 +212,7 @@ function startGame(variant) {
   }
 
   function render() {
+    syncClock();
     renderHud();
     renderBars();
     renderNotices();
@@ -291,7 +310,8 @@ function startGame(variant) {
     return h("div", { class: `effect ${e.tone}`, role: "status" },
       h("h2", {}, e.title),
       h("div", { class: "chips" }, e.chips.map((c, i) => h("span", { class: "chip", style: `animation-delay:${0.05 + step * (i + 1)}s` }, c))),
-      e.reason ? h("p", { style: `animation-delay:${0.05 + step * (e.chips.length + 1)}s` }, e.reason) : null);
+      // Som EffectBox.swift: förklaringen kommer samtidigt som sista chipet.
+    e.reason ? h("p", { style: `animation-delay:${0.05 + step * e.chips.length}s` }, e.reason) : null);
   }
 
   function choiceButton(c) {
@@ -325,13 +345,14 @@ function startGame(variant) {
       h("p", {}, e.text),
       h("div", { class: "buttons" },
         h("button", { class: "primary", type: "button", onclick: () => { game = fresh(); running = true; shownMain = null; shownNotices = []; board.reset(); render(); window.scrollTo(0, 0); } }, "Spela igen"),
-        h("a", { class: "secondary", href: "#", onclick: toMenu, style: "display:flex;align-items:center;justify-content:center;text-decoration:none" }, "Till menyn")),
+        h("a", { class: "secondary link-btn", href: "#", onclick: toMenu }, "Till menyn")),
       e.footnote ? h("p", { class: "foot" }, e.footnote) : null));
+    overlayHost.querySelector("button").focus();
   }
 
   function openTips() {
     tipsOpen = true;
-    const close = () => { tipsOpen = false; save(`tipsSeen.${game.title}`, true); sheet.remove(); };
+    const close = () => { tipsOpen = false; save(tipsKey(game.title), true); sheet.remove(); syncClock(); };
     const sheet = h("div", { class: "overlay sheet", role: "dialog", "aria-modal": "true", "aria-label": "Så spelar du", onclick: (ev) => { if (ev.target === sheet) close(); } },
       h("div", { class: "panel" },
         h("h2", {}, "Så spelar du"),
@@ -339,30 +360,37 @@ function startGame(variant) {
         h("p", { class: "note" }, "Varje knapp visar vad den gör innan du trycker. Rykten och TÄNK OM kommer som små notiser och stoppar inte tiden."),
         h("button", { class: "primary", type: "button", onclick: close }, "Uppfattat")));
     app.append(sheet);
+    sheet.querySelector("button").focus();
+    syncClock();
   }
 
-  // Klockan: en dag i taget när ingen nyhet visas, spelet pågår, fliken syns och dagarna rullar.
-  function schedule() {
-    timer = setTimeout(() => {
-      if (stopped) return;
-      if (!turnBased && running && !tipsOpen && document.visibilityState === "visible" && !game.paused && !game.ending) {
-        const wasPaused = game.paused;
+  // Klockan: en dag i taget när ingen nyhet visas, spelet pågår, hjälpen är stängd, fliken syns och dagarna rullar.
+  // Varje gång klockan börjar gå igen (efter en nyhet, paus, hjälpen eller en dold flik) får spelaren en hel dag.
+  const clockRuns = () => !turnBased && running && !tipsOpen && document.visibilityState === "visible" && !game.paused && !game.ending;
+  function syncClock() {
+    if (clockRuns() && timer === 0) {
+      timer = setTimeout(() => {
+        timer = 0;
+        if (!clockRuns()) return;
         game.tick(1);
-        if (!wasPaused && game.paused) buzz([30, 40, 30]);
+        if (game.paused) buzz([30, 40, 30]);
         render();
-      }
-      schedule();
-    }, secondsPerDay * 1000);
+      }, secondsPerDay * 1000);
+    } else if (!clockRuns() && timer !== 0) {
+      clearTimeout(timer);
+      timer = 0;
+    }
   }
+  document.addEventListener("visibilitychange", syncClock);
 
   render();
   if (!tipsSeen(game.title)) openTips();
-  if (!turnBased) schedule();
 
   return {
     stop() {
-      stopped = true;
+      document.removeEventListener("visibilitychange", syncClock);
       clearTimeout(timer);
+      timer = 0;
       board.stop();
     },
   };
@@ -374,7 +402,8 @@ function makeBoard(getLines) {
   const canvas = h("canvas", { role: "img", "aria-label": "Nätverk över partiernas relationer" });
   const legend = h("div", { class: "legend" },
     h("span", {}, "☁️ block"), h("span", {}, `${relationEmoji.attraction} samarbete`), h("span", {}, `${relationEmoji.negotiating} förhandlar`),
-    h("span", {}, `${relationEmoji.conflict} röd linje`), h("span", { class: "dim" }, "tjock linje, orange skiva = nytt"));
+    h("span", {}, `${relationEmoji.conflict} röd linje`), h("span", { class: "dim" }, "tjock linje, orange skiva = nytt"),
+    h("span", { class: "rumor" }, "lila ring = rykte"));
   const details = h("details", { class: "board" }, h("summary", {}, "Visa bordet (partiernas trådar)"), canvas, legend);
 
   let layout = new GraphLayout();
@@ -407,6 +436,8 @@ function makeBoard(getLines) {
     advance(now, lines);
     const dpr = window.devicePixelRatio || 1;
     const w = canvas.clientWidth, hgt = canvas.clientHeight;
+    // Dold eller ännu inte utlagd: inget att rita (negativa radier skulle kasta fel).
+    if (w <= 2 * 8 || hgt <= 2 * 8) return;
     if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(hgt * dpr)) {
       canvas.width = Math.round(w * dpr); canvas.height = Math.round(hgt * dpr);
     }
@@ -451,6 +482,10 @@ function makeBoard(getLines) {
       const [x, y] = pt(spots.get(line.pair));
       ctx.fillStyle = line.isNew ? "rgba(255, 149, 0, 0.35)" : "#1f1f1f";
       ctx.beginPath(); ctx.arc(x, y, er, 0, 2 * Math.PI); ctx.fill();
+      if (line.isRumor) {
+        // Rykten är spelets påhitt: lila streckad ring skiljer dem från de verkliga rubrikernas linjer.
+        ctx.save(); ctx.strokeStyle = "#af52de"; ctx.lineWidth = 2.5; ctx.setLineDash([4, 3]); ctx.stroke(); ctx.restore();
+      }
       ctx.font = `${er * 1.25}px system-ui, sans-serif`;
       ctx.fillText(relationEmoji[line.kind], x, y + er * 0.05);
     }

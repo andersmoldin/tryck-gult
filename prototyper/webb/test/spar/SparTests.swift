@@ -95,6 +95,8 @@ private func systemTrace(seed: UInt64, hard: Bool, bot: String) -> [String] {
         if g.paused != nil { g.resume() }
         if bot == "awake" { awakeMove(&g) }
         if bot == "varied", k % 4 == 0, !g.cards.isEmpty { g.play(g.cards[(k / 4) % g.cards.count].id) }
+        // "krav": KRAV på L så fort stämpeln är laddad, så att två krav i rad får L att spricka.
+        if bot == "krav", g.charges[.demand]! > 0 { g.demand(.L) }
         g.tick(days: 1)
         out.append(snap(g, extra: systemExtra(g)))
     }
@@ -137,6 +139,9 @@ struct SparTests {
                     rounds.append("{\"game\":\"system\",\"seed\":\"\(seed)\",\"hard\":\(hard),\"bot\":\(q(bot)),\"steps\":\(arr(systemTrace(seed: seed, hard: hard, bot: bot)))}")
                 }
             }
+        }
+        for seed: UInt64 in [0, 7] {
+            rounds.append("{\"game\":\"system\",\"seed\":\"\(seed)\",\"hard\":false,\"bot\":\"krav\",\"steps\":\(arr(systemTrace(seed: seed, hard: false, bot: "krav")))}")
         }
         // Stora seeds (över 2^53) prövar att 64-bitarsaritmetiken stämmer.
         for seed: UInt64 in [UInt64.max, 0x9E37_79B9_7F4A_7C15, 1 << 63] {

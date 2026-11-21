@@ -1,4 +1,9 @@
 // Port av GraphTests.swift (grafens egenskaper), körd på bordet så som Systemknuten bygger det dag för dag.
+//
+// Två Swift-tester är inte porterade, eftersom de bara gäller talmannens glesa nätverk (6–10 linjer) som de
+// prövades på i Swift: "Emojierna krockar varken med partierna eller med varandra" och "Grupperingarna syns".
+// På Systemknutens bord, med upp till ett dussin handslag, håller de inte – inte heller i iOS-appen, som har
+// samma layout och placering. Ramtestet nedan prövar därför ritytan (GraphMetrics.extent), inte enhetsrutan.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { GraphLayout, GraphMetrics as M, clusters, emojiPositions } from "../modell/graf.js";

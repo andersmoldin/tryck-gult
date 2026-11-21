@@ -52,7 +52,7 @@ export function awakeMove(g) {
   }
 }
 
-/** En hel runda Systemknuten med en testspelare ("passive", "awake" eller "varied"); `onStep` får varje steg. */
+/** En hel runda Systemknuten med en testspelare ("passive", "awake", "varied" eller "krav"); `onStep` får varje steg. */
 export function systemRound(seed, hard, bot, onStep = () => {}) {
   const g = new SystemKnotGame(seed, hard);
   onStep(g);
@@ -60,6 +60,8 @@ export function systemRound(seed, hard, bot, onStep = () => {}) {
     if (g.paused !== null) g.resume();
     if (bot === "awake") awakeMove(g);
     if (bot === "varied" && k % 4 === 0 && g.cards.length > 0) g.play(g.cards[Math.floor(k / 4) % g.cards.length].id);
+    // "krav": KRAV på L så fort stämpeln är laddad, så att två krav i rad får L att spricka.
+    if (bot === "krav" && g.charges.demand > 0) g.demand("L");
     g.tick(1);
     onStep(g);
   }

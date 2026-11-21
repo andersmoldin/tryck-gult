@@ -30,7 +30,7 @@ npm test        # samma som: node --test 'test/*.test.js'
 Det kräver Node 22 eller senare och inga paket.
 
 - `test/nyhetsknuten.test.js`, `test/systemknuten.test.js` och `test/graf.test.js` är Swift-paketets regeltester (`NewsKnotTests`, `SystemKnotTests`, `Round9Tests`, `GraphTests`), porterade.
-- `test/spar.test.js` jämför webbversionen med Swift-modellen steg för steg. `test/spar/spar.json.gz` är skrivet av Swift-modellen och innehåller 39 spelade rundor med testspelare och alla inställningar, plus utgången för Systemknuten med seed 0–199. Varje steg jämförs exakt: datum, mätare, staplar, knappar med förhandsvisning, notiser, effekter, slut och bordets trådar.
+- `test/spar.test.js` jämför webbversionen med Swift-modellen steg för steg. `test/spar/spar.json.gz` är skrivet av Swift-modellen och innehåller 41 spelade rundor med testspelare och alla inställningar, plus utgången för Systemknuten med seed 0–199. Varje steg jämförs exakt: datum, mätare, staplar, knappar med förhandsvisning, notiser, effekter, slut och bordets trådar.
 
 Ändras reglerna i Swift måste spåren skrivas om. Lägg då `test/spar/SparTests.swift` i en kopia av `BrytareModell/Tests/BrytareModellTests/` och kör:
 
