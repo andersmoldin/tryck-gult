@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <ellipse cx="0" cy="98" rx="38" ry="5" fill="#141414" opacity="0.18" transform="matrix(0.9 0 0 0.9 100 96.625)"/>
+  <circle cx="0" cy="0" r="23" fill="#FFD500" opacity="0.3" transform="matrix(0.9 0 0 0.9 100 96.625)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.6688 -0.6022 0.6022 -0.6688 100 63.325)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.7092 -0.5541 0.5541 -0.7092 97.93 59.905)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.7372 -0.5162 0.5162 -0.7372 95.59 56.755)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.7715 -0.4635 0.4635 -0.7715 93.07 53.605)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.7947 -0.4225 0.4225 -0.7947 90.46 50.635)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8222 -0.3661 0.3661 -0.8222 87.49 47.935)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.851 -0.293 0.293 -0.851 84.43 45.325)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8803 -0.1871 0.1871 -0.8803 81.1 43.165)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8999 -0.0157 0.0157 -0.8999 77.41 41.455)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8402 0.3225 -0.3225 -0.8402 73.45 40.825)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.4086 0.8019 -0.8019 -0.4086 69.85 42.355)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.1097 0.8933 -0.8933 0.1097 68.14 45.865)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.5416 0.7188 -0.7188 0.5416 68.41 49.825)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.7715 0.4635 -0.4635 0.7715 70.48 53.245)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.851 0.293 -0.293 0.851 73.36 55.945)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8863 0.1563 -0.1563 0.8863 76.69 58.105)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8978 0.0628 -0.0628 0.8978 80.38 59.725)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8999 -0.0157 0.0157 0.8999 84.16 61.075)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8951 -0.0941 0.0941 0.8951 87.94 62.065)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8863 -0.1563 0.1563 0.8863 91.9 62.785)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8733 -0.2177 0.2177 0.8733 95.95 63.145)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.856 -0.2781 0.2781 0.856 99.82 63.325)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.6688 -0.6022 -0.6022 -0.6688 100 63.325)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.7092 -0.5541 -0.5541 -0.7092 102.07 59.905)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.7372 -0.5162 -0.5162 -0.7372 104.41 56.755)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.7715 -0.4635 -0.4635 -0.7715 106.93 53.605)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.7947 -0.4225 -0.4225 -0.7947 109.54 50.635)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8222 -0.3661 -0.3661 -0.8222 112.51 47.935)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.851 -0.293 -0.293 -0.851 115.57 45.325)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8803 -0.1871 -0.1871 -0.8803 118.9 43.165)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8999 -0.0157 -0.0157 -0.8999 122.59 41.455)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8402 0.3225 0.3225 -0.8402 126.55 40.825)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.4086 0.8019 0.8019 -0.4086 130.15 42.355)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.1097 0.8933 0.8933 0.1097 131.86 45.865)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.5416 0.7188 0.7188 0.5416 131.59 49.825)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.7715 0.4635 0.4635 0.7715 129.52 53.245)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.851 0.293 0.293 0.851 126.64 55.945)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8863 0.1563 0.1563 0.8863 123.31 58.105)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8978 0.0628 0.0628 0.8978 119.62 59.725)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8999 -0.0157 -0.0157 0.8999 115.84 61.075)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8951 -0.0941 -0.0941 0.8951 112.06 62.065)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8863 -0.1563 -0.1563 0.8863 108.1 62.785)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8733 -0.2177 -0.2177 0.8733 104.05 63.145)"/>
+  <ellipse rx="3.6" ry="5.4" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.856 -0.2781 -0.2781 0.856 100.18 63.325)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.4086 0.8019 0.8019 -0.4086 95.95 123.175)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.4086 0.8019 0.8019 -0.4086 100.9 128.125)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.4086 0.8019 0.8019 -0.4086 105.85 133.075)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.3371 0.8345 0.8345 -0.3371 110.8 138.025)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.2631 0.8607 0.8607 -0.2631 115.3 143.425)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.1871 0.8803 0.8803 -0.1871 119.8 149.275)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.1097 0.8933 0.8933 -0.1097 123.4 155.575)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.856 0.2781 -0.2781 -0.856 100 123.625)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8988 0.0471 -0.0471 -0.8988 93.0119 122.705)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8803 -0.1871 0.1871 -0.8803 86.5 120.0077)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.8019 -0.4086 0.4086 -0.8019 80.9081 115.7169)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.6688 -0.6022 0.6022 -0.6688 76.6173 110.125)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.4902 -0.7548 0.7548 -0.4902 73.92 103.6131)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.2781 -0.856 0.856 -0.2781 73 96.625)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.0471 -0.8988 0.8988 -0.0471 73.92 89.6369)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.1871 -0.8803 0.8803 0.1871 76.6173 83.125)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.4086 -0.8019 0.8019 0.4086 80.9081 77.5331)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.6022 -0.6688 0.6688 0.6022 86.5 73.2423)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.7548 -0.4902 0.4902 0.7548 93.0119 70.545)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.856 -0.2781 0.2781 0.856 100 69.625)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8988 -0.0471 0.0471 0.8988 106.9881 70.545)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8803 0.1871 -0.1871 0.8803 113.5 73.2423)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.8019 0.4086 -0.4086 0.8019 119.0919 77.5331)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.6688 0.6022 -0.6022 0.6688 123.3827 83.125)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.4902 0.7548 -0.7548 0.4902 126.08 89.6369)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.2781 0.856 -0.856 0.2781 127 96.625)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.0471 0.8988 -0.8988 0.0471 126.08 103.6131)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.1871 0.8803 -0.8803 -0.1871 123.3827 110.125)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.4086 0.8019 -0.8019 -0.4086 119.0919 115.7169)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.6022 0.6688 -0.6688 -0.6022 113.5 120.0077)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.7548 0.4902 -0.4902 -0.7548 106.9881 122.705)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.4086 0.8019 -0.8019 -0.4086 104.05 123.175)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.4086 0.8019 -0.8019 -0.4086 99.1 128.125)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.4086 0.8019 -0.8019 -0.4086 94.15 133.075)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.3371 0.8345 -0.8345 -0.3371 89.2 138.025)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.2631 0.8607 -0.8607 -0.2631 84.7 143.425)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.1871 0.8803 -0.8803 -0.1871 80.2 149.275)"/>
+  <ellipse rx="6" ry="9" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(-0.1097 0.8933 -0.8933 -0.1097 76.6 155.575)"/>
+  <rect x="-7" y="-45" width="14" height="15" rx="5" fill="#FFD500" stroke="#141414" stroke-width="2.5" transform="matrix(0.9 0 0 0.9 100 96.625)"/>
+  <rect x="-7" y="0" width="14" height="11" rx="2" fill="#F4EFE3" stroke="#141414" stroke-width="2.5" transform="matrix(0.7015 -0.3271 0.3271 0.7015 124.3 156.925)"/>
+  <rect x="-3" y="10" width="6" height="3.5" rx="1" fill="#141414" transform="matrix(0.7015 -0.3271 0.3271 0.7015 124.3 156.925)"/>
+  <path d="M-3,3.5 v4 M0,3.5 v4 M3,3.5 v4" fill="#F4EFE3" stroke="#141414" stroke-width="1.2" stroke-linecap="round" transform="matrix(0.7015 -0.3271 0.3271 0.7015 124.3 156.925)"/>
+  <path d="M-14,-2 Q-9,-11 -4,-2" fill="none" stroke="#141414" stroke-width="3" stroke-linecap="round" transform="matrix(0.9 0 0 0.9 100 96.625)"/>
+  <path d="M4,-2 Q9,-11 14,-2" fill="none" stroke="#141414" stroke-width="3" stroke-linecap="round" transform="matrix(0.9 0 0 0.9 100 96.625)"/>
+  <path d="M-8,5 Q0,17 8,5 Z" fill="#141414" stroke="#141414" stroke-width="2" stroke-linejoin="round" transform="matrix(0.9 0 0 0.9 100 96.625)"/>
+  <rect x="-4" y="-2.5" width="8" height="5" stroke="#141414" stroke-width="1.5" stroke-linejoin="round" fill="#E8618C" transform="matrix(0.8157 0.3804 -0.3804 0.8157 38.8 33.625)"/>
+  <rect x="-4" y="-2.5" width="8" height="5" stroke="#141414" stroke-width="1.5" stroke-linejoin="round" fill="#2F6FD0" transform="matrix(0.7794 -0.45 0.45 0.7794 69.4 17.425)"/>
+  <rect x="-4" y="-2.5" width="8" height="5" stroke="#141414" stroke-width="1.5" stroke-linejoin="round" fill="#2E9E5B" transform="matrix(0.8803 0.1871 -0.1871 0.8803 102.7 22.825)"/>
+  <rect x="-4" y="-2.5" width="8" height="5" stroke="#141414" stroke-width="1.5" stroke-linejoin="round" fill="#E8618C" transform="matrix(0.856 -0.2781 0.2781 0.856 136 15.625)"/>
+  <rect x="-4" y="-2.5" width="8" height="5" stroke="#141414" stroke-width="1.5" stroke-linejoin="round" fill="#2F6FD0" transform="matrix(0.6894 0.5785 -0.5785 0.6894 172 37.225)"/>
+  <rect x="-4" y="-2.5" width="8" height="5" stroke="#141414" stroke-width="1.5" stroke-linejoin="round" fill="#2E9E5B" transform="matrix(0.6894 -0.5785 0.5785 0.6894 37 130.825)"/>
+  <rect x="-4" y="-2.5" width="8" height="5" stroke="#141414" stroke-width="1.5" stroke-linejoin="round" fill="#2F6FD0" transform="matrix(0.8693 0.2329 -0.2329 0.8693 49.6 157.825)"/>
+  <rect x="-4" y="-2.5" width="8" height="5" stroke="#141414" stroke-width="1.5" stroke-linejoin="round" fill="#E8618C" transform="matrix(0.8157 -0.3804 0.3804 0.8157 159.4 156.025)"/>
+  <rect x="-4" y="-2.5" width="8" height="5" stroke="#141414" stroke-width="1.5" stroke-linejoin="round" fill="#2E9E5B" transform="matrix(0.7794 0.45 -0.45 0.7794 175.6 134.425)"/>
+</svg>
