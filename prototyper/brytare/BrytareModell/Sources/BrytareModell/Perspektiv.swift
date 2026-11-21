@@ -7,6 +7,8 @@ public struct Choice: Identifiable, Equatable, Sendable {
     public let quip: String
     /// Bild i asset-katalogen (t.ex. en stämpel), om kortet har en.
     public var icon: String? = nil
+    /// Vad knappen gör och kostar, före valet (t.ex. "▼ Vänster ca −8 · 1 spaltmeter").
+    public var preview: String? = nil
 }
 
 public struct Meter: Equatable, Sendable {
@@ -34,6 +36,8 @@ public struct Effect: Equatable, Sendable {
     public let tone: Tone
     /// Korta rader om vad som ändrades, t.ex. "Tålamod −1".
     public let chips: [String]
+    /// Varför det blev så, i en mening.
+    public var reason: String? = nil
 }
 
 func voteText(_ r: VoteResult) -> String {

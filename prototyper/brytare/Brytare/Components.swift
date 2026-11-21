@@ -22,6 +22,10 @@ struct EffectBox: View {
                 .scaleEffect(shown > 0 ? 1 : 0.4, anchor: .leading)
                 .opacity(shown > 0 ? 1 : 0)
             FlowChips(chips: Array(effect.chips.prefix(max(0, shown - 1))), color: color)
+            if let reason = effect.reason, shown > effect.chips.count {
+                Text(reason).font(.subheadline).foregroundStyle(.white.opacity(0.9))
+                    .transition(.opacity)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)

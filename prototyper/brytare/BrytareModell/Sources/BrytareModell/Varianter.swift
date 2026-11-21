@@ -12,6 +12,14 @@ public struct Bar: Equatable, Sendable {
     public let isLeading: Bool
 }
 
+/// En liten avisering som inte stoppar tiden (rykten, TÄNK OM-rader, läckor som landar).
+public struct Notice: Equatable, Sendable {
+    public enum Kind: Sendable { case rumor, whatIf, info, real }
+    public let day: Int
+    public let kind: Kind
+    public let text: String
+}
+
 /// Gemensamt för varianterna med klocka (appen visar dem med samma skärm).
 public protocol ClockGame: Sendable {
     var title: String { get }
@@ -26,10 +34,10 @@ public protocol ClockGame: Sendable {
     var bars: [Bar] { get }
     /// Reaktioner på nyheten som visas (tomt = bara "Fortsätt").
     var newsChoices: [Choice] { get }
-    /// En kort rad om sådant simuleringen hittat på (märkt TÄNK OM).
-    var ticker: String? { get }
     /// Spelarens figur (bild i asset-katalogen), om varianten har en.
     var figure: String? { get }
+    /// Små aviseringar, nyast sist (stoppar inte tiden).
+    var notices: [Notice] { get }
     /// Korten som går att spela just nu (bara de som spelaren har råd med).
     var cards: [Choice] { get }
     /// Vad senaste kortet ledde till.
@@ -43,8 +51,8 @@ public protocol ClockGame: Sendable {
 extension ClockGame {
     public var bars: [Bar] { [] }
     public var newsChoices: [Choice] { [] }
-    public var ticker: String? { nil }
     public var figure: String? { nil }
+    public var notices: [Notice] { [] }
 }
 
 /// Knuten och Hamna i regering spelar i en `World`.

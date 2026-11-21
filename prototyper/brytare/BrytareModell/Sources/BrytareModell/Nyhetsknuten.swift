@@ -122,7 +122,7 @@ public struct NewsKnotGame: ClockGame {
     public private(set) var gifts = 0
     public private(set) var effect: Effect?
     public private(set) var ending: Ending?
-    public private(set) var ticker: String?
+    public private(set) var notices: [Notice] = []
     private var current: KnotNews?
     private var queue: [KnotNews]
     private var stillUntil: [Lane: Int] = [:]
@@ -214,10 +214,32 @@ public struct NewsKnotGame: ClockGame {
         if let lane = Lane.allCases.first(where: { lanes[$0]! >= 100 }) { lose(lane, "\(lane.short) nådde 100 % – talmannen tog gräddfilen") }
     }
 
+    private mutating func notify(_ kind: Notice.Kind, _ text: String) {
+        notices.append(Notice(day: day, kind: kind, text: text))
+        if notices.count > 5 { notices.removeFirst(notices.count - 5) }
+    }
+
+    private func deltaText(_ deltas: [Lane: Double]) -> String {
+        Lane.allCases.compactMap { lane in deltas[lane].map { ($0 >= 0 ? "▲ " : "▼ ") + "\(lane.short) \($0 >= 0 ? "+" : "−")\(Int(abs($0)))" } }
+            .joined(separator: ", ")
+    }
+
+    /// Släpper dagens nyheter. Rykten blir aviseringar (stoppar inte tiden); viktiga nyheter blir huvudkortet.
     private mutating func releaseNews() -> Bool {
-        guard current == nil, let next = queue.first, next.day <= day else { return false }
-        queue.removeFirst()
-        for (lane, d) in next.deltas { move(lane, d) }
+        while current == nil, let next = queue.first, next.day <= day {
+            queue.removeFirst()
+            for (lane, d) in next.deltas { move(lane, d) }
+            if next.kind == .rumor {
+                notify(.rumor, "RYKTE (påhittat): \(next.title) " + deltaText(next.deltas))
+                checkGraddfil()
+                continue
+            }
+            return show(next)
+        }
+        return false
+    }
+
+    private mutating func show(_ next: KnotNews) -> Bool {
         if next.pause > 0 { for lane in Lane.allCases { stillUntil[lane] = day + next.pause } }
         current = next
         checkGraddfil()
@@ -228,11 +250,11 @@ public struct NewsKnotGame: ClockGame {
         for leak in leaks where leak.day == day {
             if let last = lastLeak[leak.lane], day - last <= 5 {
                 move(leak.lane, 5)
-                ticker = "Läckan om \(leak.lane.short) dementerades. Den gav +5 i stället."
+                notify(.info, "Läckan om \(leak.lane.short) dementerades – ▲ +5. Två läckor inom fem dagar blir en dementi.")
             } else {
                 let hit = deadlineDays.contains(day) ? 22.0 : 15.0
                 move(leak.lane, -hit)
-                ticker = "Läckan om \(leak.lane.short) landade: −\(Int(hit))" + (hit > 15 ? " på rätt dag." : ".")
+                notify(.info, "Din läcka landade: ▼ \(leak.lane.short) −\(Int(hit))" + (hit > 15 ? " – på en deadline, därför hårdare." : "."))
             }
             lastLeak[leak.lane] = day
         }
@@ -249,9 +271,10 @@ public struct NewsKnotGame: ClockGame {
             lamps -= 1
             move(lane, -25)
             spaltmeter = min(Self.spaltmeterCap, spaltmeter + 3)
-            effect = Effect(title: "OMRÖSTNINGEN FÖLL", tone: .good, chips: ["\(lane.label) −25", "Lampa −1", "+3 spaltmeter"])
-            ticker = v.real ? "I verkligheten föll omröstningen \(dateText(day: day))."
-                            : "TÄNK OM: talmannens omröstning om \(lane.short) föll \(dateText(day: day))."
+            effect = Effect(title: "OMRÖSTNINGEN FÖLL", tone: .good, chips: ["▼ \(lane.label) −25", "Lampa −1", "+3 spaltmeter"],
+                            reason: "\(lane.short) stod under 85 % – det räckte inte för en regering.")
+            notify(v.real ? .info : .whatIf, v.real ? "I verkligheten föll omröstningen \(dateText(day: day))."
+                                               : "TÄNK OM: talmannens omröstning om \(lane.short) föll \(dateText(day: day)).")
             if lamps == 0 {
                 ending = Ending(title: "EXTRAVAL", text: verdict, isExtraval: true,
                                 footnote: "Rubrikerna är verkliga. Ryktena, slutspurten och utgången är spelets påhitt.")
@@ -279,18 +302,29 @@ public struct NewsKnotGame: ClockGame {
 
     // MARK: Reaktioner och kort
 
+    private func remindPower(_ n: KnotNews) -> Double { n.kind == .anonymous ? 6 : 8 }
+
+    private func hitPreview(_ lane: Lane, _ by: Double) -> String {
+        lanes[lane]! < 25 ? "\(lane.short): ingen effekt (under 25 %)" : "▼ \(lane.label) ca −\(Int(by))"
+    }
+
     public var newsChoices: [Choice] {
         guard let n = current, ending == nil else { return [] }
-        if n.kind == .rumor { return [Choice(id: "read", title: "Fortsätt", quip: "Ryktet är spelets påhitt.")] }
-        if n.gift > 0 { return [Choice(id: "thanks", title: "TACK SÅ MYCKET", quip: "Partiledarna gjorde jobbet åt dig. +\(n.gift) spaltmeter.")] }
+        if n.gift > 0 {
+            return [Choice(id: "thanks", title: "TACK SÅ MYCKET", quip: "Partiledarna gjorde jobbet åt dig.",
+                           preview: "+\(n.gift) spaltmeter")]
+        }
         var list: [Choice] = []
         if spaltmeter >= 1 {
-            list.append(Choice(id: "remind.\(n.target.rawValue)", title: "Påminn – \(n.target.label)", quip: "1 spaltmeter. " + n.quip))
+            list.append(Choice(id: "remind.\(n.target.rawValue)", title: "Påminn – \(n.target.label)", quip: n.quip,
+                               preview: hitPreview(n.target, remindPower(n)) + " · 1 spaltmeter"))
             let second = Lane.allCases.filter { $0 != n.target }.max { lanes[$0]! < lanes[$1]! }!
             list.append(Choice(id: "follow.\(n.target.rawValue).\(second.rawValue)", title: "Följdfråga – \(n.target.short) och \(second.short)",
-                               quip: "1 spaltmeter. Svaret blir en ny fråga."))
+                               quip: "Svaret blir en ny fråga.",
+                               preview: hitPreview(n.target, 4) + " och " + hitPreview(second, 4) + " · 1 spaltmeter"))
         }
-        list.append(Choice(id: "nocomment", title: "Inga kommentarer", quip: "Ger 1 spaltmeter. Tystnad är också ett citat."))
+        list.append(Choice(id: "nocomment", title: "Inga kommentarer", quip: "Tystnad är också ett citat.",
+                           preview: "+1 spaltmeter · mätaren står still"))
         return list
     }
 
@@ -298,17 +332,22 @@ public struct NewsKnotGame: ClockGame {
         guard ending == nil, current == nil else { return [] }
         var list: [Choice] = []
         let lane = leading
+        func leakPreview(_ landing: Int) -> String {
+            let hit = deadlineDays.contains(landing) ? 22 : 15
+            let denial = lastLeak[lane].map { landing - $0 <= 5 } ?? false
+            return (denial ? "Risk: dementi ▲ \(lane.short) +5" : "▼ \(lane.label) −\(hit) den \(dateText(day: landing))" + (hit > 15 ? " (deadline)" : ""))
+                + " · 2 spaltmeter"
+        }
         if settings.leakWhileRunning && spaltmeter >= 2 {
             list.append(Choice(id: "leak.\(lane.rawValue).\(day + 1)", title: "Läck om \(lane.short) till i morgon",
-                               quip: "2 spaltmeter. Kvällspressen tar allt."))
+                               quip: "Kvällspressen tar allt.", preview: leakPreview(day + 1)))
             let target = (day + 1...day + 3).first { deadlineDays.contains($0) && $0 > day + 1 } ?? (day + 3)
-            let onDeadline = deadlineDays.contains(target)
-            list.append(Choice(id: "leak.\(lane.rawValue).\(target)", title: "Läck om \(lane.short) till \(dateText(day: target))" + (onDeadline ? " – deadline" : ""),
-                               quip: "2 spaltmeter. Tajmingen är allt."))
+            list.append(Choice(id: "leak.\(lane.rawValue).\(target)", title: "Läck om \(lane.short) till \(dateText(day: target))",
+                               quip: "Tajmingen är allt.", preview: leakPreview(target)))
         }
         if spaltmeter >= 3 && day > (stillUntil[lane] ?? -1) {
-            list.append(Choice(id: "sega", title: "Sega – \(lane.label) står still",
-                               quip: "3 spaltmeter. ”Processen får ta tid.”"))
+            list.append(Choice(id: "sega", title: "Sega – \(lane.label)", quip: "”Processen får ta tid.”",
+                               preview: "\(lane.label) står still 4 dagar · 3 spaltmeter"))
         }
         return list
     }
@@ -321,10 +360,10 @@ public struct NewsKnotGame: ClockGame {
             case "thanks":
                 spaltmeter = min(Self.spaltmeterCap, spaltmeter + n.gift)
                 gifts += 1
-                effect = Effect(title: "GÅVA", tone: .good, chips: ["+\(n.gift) spaltmeter"])
+                effect = Effect(title: "GÅVA", tone: .good, chips: ["+\(n.gift) spaltmeter"], reason: "Partiledarna låste sig själva.")
             case "remind":
                 spaltmeter -= 1; moves += 1
-                hit(Lane(rawValue: parts[1])!, by: n.kind == .anonymous ? 6 : 8, label: "PÅMINT")
+                hit(Lane(rawValue: parts[1])!, by: remindPower(n), label: "PÅMINT")
             case "follow":
                 spaltmeter -= 1; moves += 1
                 let a = Lane(rawValue: parts[1])!, b = Lane(rawValue: parts[2])!
@@ -332,12 +371,11 @@ public struct NewsKnotGame: ClockGame {
                     guard lanes[lane]! >= 25 else { return "\(lane.short): ingen bryr sig" }
                     move(lane, -4); return "\(lane.label) −4"
                 }
-                effect = Effect(title: "FÖLJDFRÅGA", tone: .good, chips: ["−1 spaltmeter"] + chips)
+                effect = Effect(title: "FÖLJDFRÅGA", tone: .good, chips: ["−1 spaltmeter"] + chips,
+                                reason: "Två spår fick var sin fråga. Under 25 % bryr sig ingen.")
             case "nocomment":
                 spaltmeter = min(Self.spaltmeterCap, spaltmeter + 1)
-                effect = Effect(title: "INGA KOMMENTARER", tone: .neutral, chips: ["+1 spaltmeter"])
-            case "read":
-                effect = nil
+                effect = Effect(title: "INGA KOMMENTARER", tone: .neutral, chips: ["+1 spaltmeter"], reason: "Tystnad kostar inget och ger lite.")
             default:
                 return
             }
@@ -350,11 +388,13 @@ public struct NewsKnotGame: ClockGame {
             spaltmeter -= 2; moves += 1
             let lane = Lane(rawValue: parts[1])!, landing = Int(parts[2])!
             leaks.append((landing, lane))
-            effect = Effect(title: "LÄCKA LAGD", tone: .neutral, chips: ["−2 spaltmeter", "\(lane.label) \(dateText(day: landing))"])
+            effect = Effect(title: "LÄCKA LAGD", tone: .neutral, chips: ["−2 spaltmeter", "\(lane.label) \(dateText(day: landing))"],
+                            reason: "Läckan landar \(dateText(day: landing)). På en deadline eller omröstningsdag slår den hårdare.")
         case "sega":
             spaltmeter -= 3; moves += 1
             stillUntil[leading] = day + 4
-            effect = Effect(title: "SEGA", tone: .good, chips: ["−3 spaltmeter", "\(leading.label) står still 4 dagar"])
+            effect = Effect(title: "SEGA", tone: .good, chips: ["−3 spaltmeter", "\(leading.label) står still 4 dagar"],
+                            reason: "Det ledande spåret står still medan processen får ta tid.")
         default:
             return
         }
@@ -362,11 +402,14 @@ public struct NewsKnotGame: ClockGame {
 
     private mutating func hit(_ lane: Lane, by: Double, label: String) {
         if lanes[lane]! < 25 {
-            effect = Effect(title: "INGEN BRYR SIG", tone: .neutral, chips: ["−1 spaltmeter", "\(lane.short) under 25 %"])
+            effect = Effect(title: "INGEN BRYR SIG", tone: .neutral, chips: ["−1 spaltmeter", "\(lane.short) under 25 %"],
+                            reason: "Ett spår under 25 % är inte en nyhet. Sikta på det som leder.")
             return
         }
+        let before = lanes[lane]!
         move(lane, -by)
-        effect = Effect(title: label, tone: .good, chips: ["−1 spaltmeter", "\(lane.label) −\(Int(by))"])
+        effect = Effect(title: label, tone: .good, chips: ["−1 spaltmeter", "▼ \(lane.label) −\(Int(by))"],
+                        reason: "\(lane.short) låg på \(Int(before)) % – påminnelsen bet.")
     }
 
     // MARK: Visning

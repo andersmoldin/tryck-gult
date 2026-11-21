@@ -113,7 +113,7 @@ public struct SystemKnotGame: ClockGame {
     public private(set) var paused: NewsItem?
     public private(set) var effect: Effect?
     public private(set) var ending: Ending?
-    public private(set) var ticker: String?
+    public private(set) var notices: [Notice] = []
     public private(set) var lamps = 4
     public private(set) var charges: [Stamp: Int] = [.leak: 0, .demand: 0, .delay: 0]
     public private(set) var moves = 0
@@ -258,6 +258,11 @@ public struct SystemKnotGame: ClockGame {
         gifts += 1
     }
 
+    private mutating func notify(_ kind: Notice.Kind, _ text: String) {
+        notices.append(Notice(day: day, kind: kind, text: text))
+        if notices.count > 5 { notices.removeFirst(notices.count - 5) }
+    }
+
     private mutating func dropConstraint(_ id: String) { constraints.removeAll { $0.id == id } }
 
     private mutating func raise(_ a: P, _ b: P, _ by: Double) { rel[Pair(a, b)] = min(100, rel[Pair(a, b)]! + by) }
@@ -293,7 +298,7 @@ public struct SystemKnotGame: ClockGame {
             dropConstraint("SD-ministrar")
             constraints.append(Constraint(id: "C-totalpaket", party: .C, kind: .demand, hard: false, applies: { $0.leader != .C }, until: 62))
             news("SD släpper kravet på ministerposter. C kräver ett ”totalpaket” av Andersson och Kristersson.", "Händelse #14 och #15, 6 nov")
-            if !hadDemand { ticker = "TÄNK OM: SD hade redan gett vika i det här bordet." }
+            if !hadDemand { notify(.whatIf, "TÄNK OM: SD hade redan gett vika i det här bordet.") }
         case 56:
             calm(.S, 30)
             constraints.append(Constraint(id: "S-inteTidö2", party: .S, kind: .red, hard: true, applies: { $0.leader == .M }))
@@ -366,14 +371,14 @@ public struct SystemKnotGame: ClockGame {
             if let c = constraints.first(where: { $0.party == x && !$0.player && !$0.hard }) {
                 dropConstraint(c.id)
                 yields[x, default: 0] += 1
-                ticker = "TÄNK OM: \(x.rawValue) släpper ett krav (\(c.id))."
+                notify(.whatIf, "TÄNK OM: \(x.rawValue) släpper ett krav (\(c.id)).")
                 patience[x] = SystemTuning.patienceAfterYield
             } else if hardLinesCanFall, yields[x, default: 0] >= 2,
                       let c = constraints.first(where: { $0.party == x && !$0.player && $0.hard }) {
                 // Inställning B: efter två eftergifter kan även en hård linje falla.
                 dropConstraint(c.id)
                 yields[x, default: 0] += 1
-                ticker = "TÄNK OM: \(x.rawValue) släpper en röd linje (\(c.id))."
+                notify(.whatIf, "TÄNK OM: \(x.rawValue) släpper en röd linje (\(c.id)).")
                 patience[x] = SystemTuning.patienceAfterYield
             } else {
                 patience[x] = SystemTuning.patienceAfterBreakingPoint
@@ -395,7 +400,7 @@ public struct SystemKnotGame: ClockGame {
             }
             lamps -= 1
             effect = Effect(title: "FÖLL", tone: .good, chips: ["\(v.track): \(Int(solid)) av 175", "Lampa −1"])
-            if !v.real { ticker = "TÄNK OM: talmannens omröstning om \(v.track) föll." }
+            if !v.real { notify(.whatIf, "TÄNK OM: talmannens omröstning om \(v.track) föll.") }
             tracks[v.track]!.cooldownUntil = day + SystemTuning.voteCooldownDays
             tryckBonus += SystemTuning.failedVoteTryck
             for x in P.allCases where !t.members.contains(x) {
@@ -417,7 +422,7 @@ public struct SystemKnotGame: ClockGame {
         for t in tracks.values.sorted(by: { $0.name < $1.name }) where t.active && day >= t.cooldownUntil {
             if meter(t).solid >= SystemTuning.graddfilSolid {
                 votes.append(ScheduledVote(day: day + SystemTuning.graddfilDays, track: t.name, real: false))
-                ticker = "TÄNK OM: \(t.name) har 175. Talmannen kallar till omröstning \(dateText(day: day + SystemTuning.graddfilDays))."
+                notify(.whatIf, "TÄNK OM: \(t.name) har 175. Talmannen kallar till omröstning \(dateText(day: day + SystemTuning.graddfilDays)).")
                 return
             }
         }
@@ -453,8 +458,9 @@ public struct SystemKnotGame: ClockGame {
         let hit = fresh ? SystemTuning.freshLeakHit : SystemTuning.leakHit
         rel[pair] = max(-100, rel[pair]! - hit)
         for x in [a, b] { patience[x] = max(1, patience[x]! - SystemTuning.leakPatienceCost) }
-        effect = Effect(title: "LÄCKA", tone: .good, chips: ["\(a.rawValue)–\(b.rawValue) −\(Int(hit))" + (fresh ? " (färskt handslag)" : ""), "Tålamod −7 för båda"])
-        ticker = "RYKTE (påhittat): något om \(a.rawValue) och \(b.rawValue) har läckt."
+        effect = Effect(title: "LÄCKA", tone: .good, chips: ["\(a.rawValue)–\(b.rawValue) −\(Int(hit))" + (fresh ? " (färskt handslag)" : ""), "Tålamod −7 för båda"],
+                        reason: "Tråden \(a.rawValue)–\(b.rawValue) försvagades\(fresh ? " hårt, eftersom handslaget var färskt" : ""). Otåliga partier ger lättare vika senare.")
+        notify(.rumor, "RYKTE (påhittat): något om \(a.rawValue) och \(b.rawValue) har läckt.")
         noteKindChanges()
         return true
     }
@@ -466,14 +472,16 @@ public struct SystemKnotGame: ClockGame {
         if constraints.contains(where: { $0.player && $0.party == x && day <= $0.until }) {
             constraints.removeAll { $0.party == x && ($0.player || !$0.hard) }
             patience[x] = SystemTuning.burstPatience
-            effect = Effect(title: "\(x.rawValue) SPRICKER", tone: .bad, chips: ["Alla mjuka krav släppta"])
+            effect = Effect(title: "\(x.rawValue) SPRICKER", tone: .bad, chips: ["Alla mjuka krav släppta"],
+                            reason: "Två krav i rad var för mycket. \(x.rawValue) gav upp sina mjuka krav.")
             return true
         }
         let target = leading.name
         constraints.append(Constraint(id: "spelare-\(x.rawValue)-\(day)", party: x, kind: .demand, hard: false,
                                       applies: { $0.name == target }, until: day + SystemTuning.kravDays, player: true))
         patience[x] = min(100, patience[x]! + SystemTuning.kravPatience)
-        effect = Effect(title: "KRAV", tone: .good, chips: ["\(x.rawValue) kräver något av \(target)", "\(SystemTuning.kravDays) dagar"])
+        effect = Effect(title: "KRAV", tone: .good, chips: ["\(x.rawValue) kräver något av \(target)", "\(SystemTuning.kravDays) dagar"],
+                        reason: "\(x.rawValue) stöder nu \(target) till högst 60 % i \(SystemTuning.kravDays) dagar.")
         return true
     }
 
@@ -484,7 +492,8 @@ public struct SystemKnotGame: ClockGame {
         freezeUntil = day + SystemTuning.forhalaDays - 1
         for i in votes.indices where !votes[i].real { votes[i].day += SystemTuning.forhalaVotePush }
         tryckBonus += SystemTuning.forhalaTryck
-        effect = Effect(title: "FÖRHALA", tone: .good, chips: ["Allt står still \(SystemTuning.forhalaDays) dagar", "Trycket +0,1"])
+        effect = Effect(title: "FÖRHALA", tone: .good, chips: ["Allt står still \(SystemTuning.forhalaDays) dagar", "Trycket +0,1"],
+                        reason: "Talmannen väntar. Spelets omröstningar skjuts fram, men partierna blir otåligare.")
         return true
     }
 
@@ -529,21 +538,32 @@ public struct SystemKnotGame: ClockGame {
         var list: [Choice] = []
         if charges[.leak]! > 0, let (a, b) = leakSuggestion {
             list.append(Choice(id: "leak.\(a.rawValue).\(b.rawValue)", title: "LÄCKA: \(a.rawValue)–\(b.rawValue)",
-                               quip: "Tråden får sig en törn. Båda blir otåligare.", icon: "stampel-lacka"))
+                               quip: "Tråden får sig en törn. Båda blir otåligare.", icon: "stampel-lacka",
+                               preview: preview("leak.\(a.rawValue).\(b.rawValue)") + " · tråden −40 (−75 om färskt), båda −7 tålamod"))
         }
         if charges[.demand]! > 0, let x = demandSuggestion {
             list.append(Choice(id: "demand.\(x.rawValue)", title: "KRAV: \(x.rawValue)",
-                               quip: "\(x.rawValue) kommer på något det måste ha. Två krav i rad får det att spricka.", icon: "stampel-krav"))
+                               quip: "Två krav i rad får det att spricka.", icon: "stampel-krav",
+                               preview: preview("demand.\(x.rawValue)") + " · \(x.rawValue) högst 60 % i \(SystemTuning.kravDays) dagar"))
         }
         if charges[.delay]! > 0 {
-            list.append(Choice(id: "delay", title: "FÖRHALA",
-                               quip: "Allt står still några dagar. Trycket stiger.", icon: "stampel-forhala"))
+            list.append(Choice(id: "delay", title: "FÖRHALA", quip: "Trycket stiger.", icon: "stampel-forhala",
+                               preview: "Allt står still \(SystemTuning.forhalaDays) dagar · spelets omröstning +\(SystemTuning.forhalaVotePush) dagar · trycket +0,1"))
         }
         return list
     }
 
-    public mutating func play(_ id: String) {
-        guard cards.contains(where: { $0.id == id }) else { return }
+    /// "Ribban Rött 168 → 146": räknat på en kopia av bordet.
+    private func preview(_ id: String) -> String {
+        let lead = leading.name
+        let before = Int(meter(tracks[lead]!).solid)
+        var copy = self
+        copy.apply(id)
+        let after = Int(copy.meter(copy.tracks[lead]!).solid)
+        return "Ribban \(lead) \(before) → \(after)"
+    }
+
+    private mutating func apply(_ id: String) {
         let parts = id.split(separator: ".").map(String.init)
         switch parts[0] {
         case "leak": if let a = P(rawValue: parts[1]), let b = P(rawValue: parts[2]) { leak(a, b) }
@@ -551,6 +571,11 @@ public struct SystemKnotGame: ClockGame {
         case "delay": delay()
         default: break
         }
+    }
+
+    public mutating func play(_ id: String) {
+        guard cards.contains(where: { $0.id == id }) else { return }
+        apply(id)
     }
 
     // MARK: Visning

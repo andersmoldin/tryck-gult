@@ -2,6 +2,15 @@
 
 En grov app att provspela på telefonen. Startmenyn väljer variant.
 
+## Omgång 9: läsbarhet (efter kaptenens provspel av omgång 8)
+
+Skärmen för knutarna är omtänkt med ios-game-creator-skillsen (`game-ui-design`, `game-ux-design`, `game-art-direction`):
+- **Lugnare klocka:** 3,5 s per dag som förval, inställbar (Lugn/Normal/Snabb). Viktiga nyheter står kvar tills du fortsätter. Klockan pausar när appen lämnar förgrunden.
+- **Dagar tur för tur** (inställning): dagen går först när du trycker Avsluta dagen; inom dagen kan du göra inget, ett eller flera drag.
+- **Knappar som säger vad de gör:** varje knapp visar riktning, ungefärlig storlek och kostnad innan du trycker (Systemknuten räknar fram Ribban exakt). Efter valet visar effektrutan vad som rörde sig och varför.
+- **Två nyhetsnivåer:** verkliga nyheter är huvudkortet som stoppar tiden; rykten, TÄNK OM och läckor som landar kommer som små notiser.
+- Fasta zoner (resurser → mätare → notiser → kort → handlingar), större text och knappar, haptik, Reduce Motion, och en palett per spel (Löpsedel respektive Förhandlingsbordet). Bordet i Systemknuten är hopfällt.
+
 ## Omgång 8: två knutar (efter `tg-knut-nyhet` och `tg-knut-system`)
 
 - **Nyhetsknuten:** du är knuten och vinner på extraval. Mätaren Uppgörelsen har tre spår (◀ Vänster, ● Mitten, ▶ Höger) med zonerna 60 och 85. Nyheter stoppar tiden och du väljer en reaktion (Påminn, Följdfråga, Inga kommentarer); gåvor – när partiledarna låser sig själva – har en enda knapp. Mellan nyheterna läcker du till en dag framåt (hårdare på deadline- och omröstningsdagar). Fyra släckta lampor = EXTRAVAL. Kaptenens öppna frågor är inställningar i menyn med rapportens förval: slutspurt efter 18 nov, läcka medan tiden går, ENLIGT UPPGIFTER-nyheter, och ryktenas innehåll (föremål och processer, eller även partimöten).

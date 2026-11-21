@@ -20,6 +20,8 @@ struct MenuView: View {
     @AppStorage("nk.anonymousSources") private var anonymousSources = true
     @AppStorage("nk.finale") private var finale = true
     @AppStorage("sk.hardLinesCanFall") private var hardLinesCanFall = false
+    @AppStorage("clock.secondsPerDay") private var secondsPerDay = 3.5
+    @AppStorage("clock.turnBased") private var turnBased = false
 
     private var newsSettings: NewsKnotSettings {
         var s = NewsKnotSettings()
@@ -69,6 +71,15 @@ struct MenuView: View {
                 }
             }
             Section {
+                Picker("Dagar", selection: $turnBased) {
+                    Text("Rullar av sig själva").tag(false)
+                    Text("Tur för tur").tag(true)
+                }
+                Picker("Spelhastighet", selection: $secondsPerDay) {
+                    Text("Lugn (5 s/dag)").tag(5.0)
+                    Text("Normal (3,5 s/dag)").tag(3.5)
+                    Text("Snabb (2 s/dag)").tag(2.0)
+                }
                 Picker("Rykten", selection: $rumorMode) {
                     Text("Bara mina drag / föremål").tag(RumorMode.ownMovesOnly)
                     Text("Även påhittade partimöten").tag(RumorMode.alsoRealPartyMeetings)
