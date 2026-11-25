@@ -202,7 +202,9 @@ function startGame(variant) {
     hud, bars, notices, main, actions, board.el, overlayHost));
 
   // Vad som redan visas, så att kort och effekter bara animeras när de är nya.
-  let shownMain = null;
+  // NOT_SHOWN skiljer sig från alla nycklar, även null (inget kort), så att nästa renderMain alltid ritar om.
+  const NOT_SHOWN = Symbol("ingenting visat");
+  let shownMain = NOT_SHOWN;
   let shownNotices = [];
 
   function act(fn) {
@@ -346,7 +348,7 @@ function startGame(variant) {
       h("h2", {}, e.title),
       h("p", {}, e.text),
       h("div", { class: "buttons" },
-        h("button", { class: "primary", type: "button", onclick: () => { game = fresh(); running = true; shownMain = null; shownNotices = []; board.reset(); render(); window.scrollTo(0, 0); } }, "Spela igen"),
+        h("button", { class: "primary", type: "button", onclick: () => { game = fresh(); running = true; shownMain = NOT_SHOWN; shownNotices = []; board.reset(); render(); window.scrollTo(0, 0); } }, "Spela igen"),
         h("a", { class: "secondary link-btn", href: "#", onclick: toMenu }, "Till menyn")),
       e.footnote ? h("p", { class: "foot" }, e.footnote) : null));
     overlayHost.querySelector("button").focus();
