@@ -18,7 +18,11 @@ python3 -m http.server 8000
 
 Öppna sedan <http://localhost:8000/>. Vill du prova från en telefon i samma nät startar du servern med `--bind 0.0.0.0` och öppnar datorns adress.
 
-Allt spelet behöver finns i mappen: `index.html`, `style.css`, `app.js`, `modell/` och `bilder/`. Inget hämtas från nätet. Därför går mappen att lägga på vilken statisk värd som helst, till exempel GitHub Pages.
+Allt spelet behöver finns i mappen: `index.html`, `style.css`, `app.js`, `modell/` och `bilder/`. Inget hämtas från nätet. Därför går mappen att lägga på vilken statisk värd som helst.
+
+## Publicering
+
+Sidan är publicerad med GitHub Pages på <https://andersmoldin.github.io/tryck-gult/> från grenen `gh-pages`. Grenen innehåller bara de statiska filerna: `index.html`, `style.css`, `app.js`, `modell/`, `bilder/` och en tom `.nojekyll`. Den uppdateras manuellt: bygg om `gh-pages` från innehållet i `prototyper/webb/` och pusha grenen.
 
 ## Testa reglerna
 

@@ -98,7 +98,7 @@ const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)")
 
 const variants = {
   nyhetsknuten: { make: () => { const s = newsSettings(); return () => new NewsKnotGame(s); }, theme: "nyhet", themeColor: "#171717" },
-  systemknuten: { make: () => { const seed = randomSeed(), hard = load("sk.hardLinesCanFall"); return () => new SystemKnotGame(seed, hard); }, theme: "system", themeColor: "#1c3629" },
+  systemknuten: { make: () => { const hard = load("sk.hardLinesCanFall"); return () => new SystemKnotGame(randomSeed(), hard); }, theme: "system", themeColor: "#1c3629" },
 };
 
 let screen = null; // { stop() } för skärmen som visas
